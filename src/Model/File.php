@@ -2,14 +2,13 @@
 
 namespace Filesystem\Model;
 
-use Core\Blue\Model\Object;
-use Core\Disc\Helper\Common;
+use Filesystem\Helper\Common;
 use Core\Incoming\Model;
-use Loader;
 use Exception;
 use SplFileInfo;
+use BlueContainer\Container;
 
-class File extends Object implements ModelInterface
+class File extends Container implements ModelInterface
 {
     /**
      * base configuration for file
@@ -53,7 +52,7 @@ class File extends Object implements ModelInterface
      */
     public function delete()
     {
-        Loader::callEvent('delete_file_object_instance_before', $this);
+//        Loader::callEvent('delete_file_object_instance_before', $this);
 
         if (Model\File::exist($this->getFullPath())) {
             $bool = Common::delete($this->getFullPath());
@@ -64,7 +63,7 @@ class File extends Object implements ModelInterface
             }
         }
 
-        $this->unsetData();
+        $this->destroy();
 //        Loader::callEvent('delete_file_object_instance_after', $this);
 
         return $this;
@@ -237,7 +236,7 @@ class File extends Object implements ModelInterface
             );
         }
 
-        $data = $this->getData();
+        $data = $this->get();
         $data['main_path'] = $destination;
         $this->updateFileInfo();
 

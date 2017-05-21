@@ -2,14 +2,14 @@
 
 namespace Filesystem\Model;
 
-use Core\Blue\Model\Object;
-use Core\Disc\Helper\Common;
+use Filesystem\Helper\Common;
 use Core\Incoming\Model;
 use Loader;
 use Exception;
 use DirectoryIterator;
+use BlueContainer\Container;
 
-class Directory extends Object implements ModelInterface
+class Directory extends Container implements ModelInterface
 {
     /**
      * base configuration for directory
@@ -55,7 +55,7 @@ class Directory extends Object implements ModelInterface
     {
 //        Loader::callEvent('load_directory_object_instance_before', $this);
 
-        if (!Model\File::exist($this->getMainPath())) {
+        if (!Common::exist($this->getMainPath())) {
 //            Loader::callEvent('load_directory_object_instance_error', $this);
             throw new Exception('directory not exists: ' . $this->getMainPath());
         }
@@ -167,7 +167,7 @@ class Directory extends Object implements ModelInterface
     {
 //        Loader::callEvent('delete_directory_object_instance_before', $this);
 
-        if (Model\File::exist($this->getMainPath())) {
+        if (Common::exist($this->getMainPath())) {
             $bool = Common::delete($this->getMainPath());
 
             if (!$bool) {
@@ -176,7 +176,7 @@ class Directory extends Object implements ModelInterface
             }
         }
 
-        $this->unsetData();
+        $this->destroy();
 //        Loader::callEvent('delete_directory_object_instance_after', $this);
 
         return $this;
@@ -236,7 +236,7 @@ class Directory extends Object implements ModelInterface
      */
     protected function saveMe()
     {
-        if (!Model\File::exist($this->getMainPath())) {
+        if (!Common::exist($this->getMainPath())) {
             $bool = Common::mkdir($this->getMainPath());
 
             if (!$bool) {

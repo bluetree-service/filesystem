@@ -2,7 +2,6 @@
 
 namespace Filesystem\Helper;
 
-use Core\Incoming\Model\File;
 use DirectoryIterator;
 
 class Common
@@ -25,7 +24,7 @@ class Common
 
         $bool = [];
 
-        if (!File::exist($path)) {
+        if (!self::exist($path)) {
             return null;
         }
 
@@ -76,12 +75,12 @@ class Common
 
         $bool = [];
 
-        if (!File::exist($path)) {
+        if (!self::exist($path)) {
             return null;
         }
 
         if (is_dir($path)) {
-            if (!File::exist($target)) {
+            if (!self::exist($target)) {
                 $bool[] = mkdir($target);
             }
 
@@ -159,7 +158,7 @@ class Common
     {
 //        Loader::callEvent('create_file_before', [&$path, &$fileName, &$data]);
 
-        if (!File::exist($path)) {
+        if (!self::exist($path)) {
             self::mkdir($path);
         }
 
@@ -193,12 +192,12 @@ class Common
     {
 //        Loader::callEvent('rename_file_or_directory_before', [&$source, &$target]);
 
-        if (!File::exist($source)) {
+        if (!self::exist($source)) {
 //            Loader::callEvent('rename_file_or_directory_error', [$source, 'source']);
             return null;
         }
 
-        if (File::exist($target)) {
+        if (self::exist($target)) {
 //            Loader::callEvent('rename_file_or_directory_error', [$target, 'target']);
             return false;
         }
@@ -253,7 +252,7 @@ class Common
     {
         $list = [];
 
-        if (!File::exist($path)) {
+        if (!self::exist($path)) {
             return null;
         }
 
@@ -322,5 +321,16 @@ class Common
         }
 
         return $pathList;
+    }
+
+    /**
+     * check that file exists
+     *
+     * @param string $path
+     * @return boolean TRUE if exists, FALSE if not
+     */
+    public static function exist($path)
+    {
+        return file_exists($path);
     }
 }
