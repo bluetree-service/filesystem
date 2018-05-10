@@ -1,6 +1,6 @@
 <?php
 
-namespace Filesystem\Model;
+namespace BlueFilesystem;
 
 interface ModelInterface
 {

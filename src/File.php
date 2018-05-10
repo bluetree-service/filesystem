@@ -1,8 +1,7 @@
 <?php
 
-namespace Filesystem\Model;
+namespace BlueFilesystem;
 
-use Filesystem\Helper\Common;
 use Core\Incoming\Model;
 use Exception;
 use SplFileInfo;
@@ -55,7 +54,7 @@ class File extends Container implements ModelInterface
 //        Loader::callEvent('delete_file_object_instance_before', $this);
 
         if (Model\File::exist($this->getFullPath())) {
-            $bool = Common::delete($this->getFullPath());
+            $bool = Fs::delete($this->getFullPath());
 
             if (!$bool) {
 //                Loader::callEvent('delete_file_object_instance_error', $this);
@@ -89,7 +88,7 @@ class File extends Container implements ModelInterface
             return $this;
         }
 
-        $bool = Common::mkfile(
+        $bool = Fs::mkfile(
             $this->getMainPath(),
             $this->getFullName(),
             $this->getContent()
@@ -169,12 +168,12 @@ class File extends Container implements ModelInterface
 
         if (Model\File::exist($this->getFullPath())) {
             $targetPath = $destination . $this->getFullName();
-            $bool = Common::move(
+            $bool = Fs::move(
                 $this->getFullPath(),
                 $targetPath
             );
         } else {
-            $bool = Common::mkfile(
+            $bool = Fs::mkfile(
                 $destination,
                 $this->getFullName(),
                 $this->getContent()
@@ -214,12 +213,12 @@ class File extends Container implements ModelInterface
 
         if (Model\File::exist($this->getFullPath())) {
             $targetPath = $destination . $this->getFullName();
-            $bool = Common::copy(
+            $bool = Fs::copy(
                 $this->getFullPath(),
                 $targetPath
             );
         } else {
-            $bool = Common::mkfile(
+            $bool = Fs::mkfile(
                 $destination,
                 $this->getFullName(),
                 $this->getContent()
@@ -260,7 +259,7 @@ class File extends Container implements ModelInterface
         $bool = true;
 
         if (Model\File::exist($this->getFullPath())) {
-            $bool = Common::move(
+            $bool = Fs::move(
                 $this->getFullPath(),
                 $name . '.' . $extension
             );

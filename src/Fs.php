@@ -1,16 +1,25 @@
 <?php
 
-namespace Filesystem\Helper;
+namespace BlueFilesystem;
 
 use DirectoryIterator;
 
-class Common
+class Fs
 {
     /**
      * restricted characters for file and directory names
      * @var string
      */
     const RESTRICTED_SYMBOLS = '#[:?*<>"|\\\]#';
+
+//    public function __construct($path, $register = null)
+//    {
+//        if (is_null($register)) {
+//            $this->register = new Register;
+//        }
+//        
+//        $this->path = $path;
+//    }
 
     /**
      * remove file or directory with all content
@@ -242,13 +251,13 @@ class Common
      * read directory content, (optionally all sub folders)
      *
      * @param string $path
-     * @param boolean $whole
+     * @param boolean $recursive
      * @return array|null
      * @example readDirectory('dir/some_dir')
      * @example readDirectory('dir/some_dir', TRUE)
      * @example readDirectory(); - read MAIN_PATH destination
      */
-    public static function readDirectory($path, $whole = false)
+    public static function readDirectory($path, $recursive = false)
     {
         $list = [];
 
@@ -264,7 +273,7 @@ class Common
                 continue;
             }
 
-            if ($whole && $element->isDir()) {
+            if ($recursive && $element->isDir()) {
                 $list[$element->getRealPath()] = self::readDirectory($element->getRealPath(), true);
             } else {
                 $list[$element->getRealPath()] = $element->getFileInfo();
@@ -332,5 +341,19 @@ class Common
     public static function exist($path)
     {
         return file_exists($path);
+    }
+
+    /**
+     * @param string $name
+     * @param array $data
+     * @return $this
+     */
+    protected function callEvent($name, array $data)
+    {
+        if (!is_null($this->event)) {
+            $this->event->callEvent($name, $data);
+        }
+
+        return $this;
     }
 }

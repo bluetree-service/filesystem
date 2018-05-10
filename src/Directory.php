@@ -1,9 +1,7 @@
 <?php
 
-namespace Filesystem\Model;
+namespace BlueFilesystem;
 
-use Filesystem\Helper\Common;
-use Core\Incoming\Model;
 use Loader;
 use Exception;
 use DirectoryIterator;
@@ -35,7 +33,7 @@ class Directory extends Container implements ModelInterface
      *
      * @param array $data
      */
-    public function __construct(array $data = [])
+    public function __construct(array $data = [], $register)
     {
 //        Loader::callEvent('directory_object_instance_before', [&$data]);
 
@@ -55,7 +53,7 @@ class Directory extends Container implements ModelInterface
     {
 //        Loader::callEvent('load_directory_object_instance_before', $this);
 
-        if (!Common::exist($this->getMainPath())) {
+        if (!Fs::exist($this->getMainPath())) {
 //            Loader::callEvent('load_directory_object_instance_error', $this);
             throw new Exception('directory not exists: ' . $this->getMainPath());
         }
@@ -167,8 +165,8 @@ class Directory extends Container implements ModelInterface
     {
 //        Loader::callEvent('delete_directory_object_instance_before', $this);
 
-        if (Common::exist($this->getMainPath())) {
-            $bool = Common::delete($this->getMainPath());
+        if (Fs::exist($this->getMainPath())) {
+            $bool = Fs::delete($this->getMainPath());
 
             if (!$bool) {
 //                Loader::callEvent('delete_directory_object_instance_error', $this);
@@ -236,8 +234,8 @@ class Directory extends Container implements ModelInterface
      */
     protected function saveMe()
     {
-        if (!Common::exist($this->getMainPath())) {
-            $bool = Common::mkdir($this->getMainPath());
+        if (!Fs::exist($this->getMainPath())) {
+            $bool = Fs::mkdir($this->getMainPath());
 
             if (!$bool) {
                 throw new Exception('unable to save main directory: ' . $this->getMainPath());
