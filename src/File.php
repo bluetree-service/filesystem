@@ -2,7 +2,6 @@
 
 namespace BlueFilesystem;
 
-use Core\Incoming\Model;
 use Exception;
 use SplFileInfo;
 use BlueContainer\Container;
@@ -53,7 +52,7 @@ class File extends Container implements ModelInterface
     {
 //        Loader::callEvent('delete_file_object_instance_before', $this);
 
-        if (Model\File::exist($this->getFullPath())) {
+        if (Fs::exist($this->getFullPath())) {
             $bool = Fs::delete($this->getFullPath());
 
             if (!$bool) {
@@ -117,7 +116,7 @@ class File extends Container implements ModelInterface
     {
 //        Loader::callEvent('load_file_object_instance_before', $this);
 
-        if (!Model\File::exist($this->getFullPath())) {
+        if (!Fs::exist($this->getFullPath())) {
 //            Loader::callEvent('load_file_object_instance_error', $this);
             throw new Exception('file not exists: ' . $this->getFullPath());
         }
@@ -166,7 +165,7 @@ class File extends Container implements ModelInterface
     {
 //        Loader::callEvent('move_file_object_instance_before', [$this, &$destination]);
 
-        if (Model\File::exist($this->getFullPath())) {
+        if (Fs::exist($this->getFullPath())) {
             $targetPath = $destination . $this->getFullName();
             $bool = Fs::move(
                 $this->getFullPath(),
@@ -211,7 +210,7 @@ class File extends Container implements ModelInterface
     {
 //        Loader::callEvent('copy_file_object_instance_before', [$this, &$destination]);
 
-        if (Model\File::exist($this->getFullPath())) {
+        if (Fs::exist($this->getFullPath())) {
             $targetPath = $destination . $this->getFullName();
             $bool = Fs::copy(
                 $this->getFullPath(),
@@ -241,7 +240,8 @@ class File extends Container implements ModelInterface
 
 //        Loader::callEvent('copy_file_object_instance_after', [$this]);
 
-        return Loader::getClass('Core\Disc\Model\File', $data)->load();
+        return (new File($data))->load();
+//        return Loader::getClass('Core\Disc\Model\File', $data)->load();
     }
 
     /**
@@ -258,7 +258,7 @@ class File extends Container implements ModelInterface
 
         $bool = true;
 
-        if (Model\File::exist($this->getFullPath())) {
+        if (Fs::exist($this->getFullPath())) {
             $bool = Fs::move(
                 $this->getFullPath(),
                 $name . '.' . $extension
@@ -320,16 +320,12 @@ class File extends Container implements ModelInterface
      */
     public function __destruct()
     {
-        try {
-            if ($this->getForceSave() && !$this->getToDelete()) {
-                $this->save();
-            }
+        if ($this->getForceSave() && !$this->getToDelete()) {
+            $this->save();
+        }
 
-            if ($this->getToDelete()) {
-                $this->delete();
-            }
-        } catch (Exception $e) {
-            Loader::exceptions($e, 'file io operation');
+        if ($this->getToDelete()) {
+            $this->delete();
         }
     }
 }

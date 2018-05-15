@@ -2,7 +2,6 @@
 
 namespace BlueFilesystem;
 
-use Loader;
 use Exception;
 use DirectoryIterator;
 use BlueContainer\Container;
@@ -33,7 +32,7 @@ class Directory extends Container implements ModelInterface
      *
      * @param array $data
      */
-    public function __construct(array $data = [], $register)
+    public function __construct(array $data = [])
     {
 //        Loader::callEvent('directory_object_instance_before', [&$data]);
 
@@ -91,6 +90,7 @@ class Directory extends Container implements ModelInterface
      * @param int $totalSize
      * @param int $files
      * @return $this
+     * @throws Exception
      */
     protected function createFileInstance(DirectoryIterator $element, &$totalSize, &$files)
     {
@@ -102,7 +102,7 @@ class Directory extends Container implements ModelInterface
         $fileList = $this->getChildFiles();
 
         /** @var File $newFile */
-        $newFile = Loader::getClass('Core\Disc\Model\File', [
+        $newFile = new File([
             'main_path' => $this->getMainPath(),
             'size' => $element->getSize(),
             'permissions' => $element->getPerms(),
@@ -130,6 +130,7 @@ class Directory extends Container implements ModelInterface
      * @param int $files
      * @param int $totalSize
      * @return $this
+     * @throws Exception
      */
     protected function createDirectoryInstance(
         DirectoryIterator $element,
@@ -140,7 +141,7 @@ class Directory extends Container implements ModelInterface
         $directoryList = $this->getChildDirectories();
 
         /** @var Directory $newDirectory */
-        $newDirectory = Loader::getClass('Core\Disc\Model\Directory', [
+        $newDirectory = new Directory([
             'main_path' => $element->getRealPath(),
         ]);
 
@@ -196,7 +197,7 @@ class Directory extends Container implements ModelInterface
 
         if ($this->getToDelete()) {
             $this->_errorsList[] = 'directory must be removed, cannot be saved: ' . $this->getMainPath();
-            Loader::callEvent('save_directory_object_instance_error', $this);
+//            Loader::callEvent('save_directory_object_instance_error', $this);
             return $this;
         }
 
@@ -213,7 +214,7 @@ class Directory extends Container implements ModelInterface
         $this->setSize($totalSize);
 
         if ($this->hasErrors()) {
-            Loader::log('exception', $this->getObjectError(), 'directory io operation');
+//            Loader::log('exception', $this->getObjectError(), 'directory io operation');
 
             $message = '';
             foreach ($this->getObjectError() as $error) {
@@ -321,9 +322,9 @@ class Directory extends Container implements ModelInterface
     {
         if (is_array($child)) {
             if (isset($child['name'])) {
-                $child = Loader::getClass('Core\Disc\Model\File', $child);
+                $child = new File($child);
             } else {
-                $child = Loader::getClass('Core\Disc\Model\Directory', $child);
+                $child = new Directory($child);
             }
         }
 
@@ -344,7 +345,7 @@ class Directory extends Container implements ModelInterface
     public function addChildFile($child)
     {
         if (is_array($child)) {
-            $child = Loader::getClass('Core\Disc\Model\File', $child);
+            $child = new File($child);
         }
 
         if (!$child instanceof File) {
@@ -372,7 +373,7 @@ class Directory extends Container implements ModelInterface
     public function addChildDirectory($child)
     {
         if (is_array($child)) {
-            $child = Loader::getClass('Core\Disc\Model\Directory', $child);
+            $child = new Directory($child);
         }
 
         if (!$child instanceof Directory) {
