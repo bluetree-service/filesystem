@@ -252,7 +252,7 @@ class Fs
      *
      * @param string $path
      * @param boolean $recursive
-     * @return array|null
+     * @return array
      * @example readDirectory('dir/some_dir')
      * @example readDirectory('dir/some_dir', TRUE)
      * @example readDirectory(); - read MAIN_PATH destination
@@ -262,7 +262,7 @@ class Fs
         $list = [];
 
         if (!self::exist($path)) {
-            return null;
+            return [];
         }
 
         $iterator = new DirectoryIterator($path);
