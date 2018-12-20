@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.1.1.0 - 2018-12-20
+### Changed
+* Fixed creating directory instead of copy file for `Fs::copy` when target is file
+
 ## 0.1.0.3 - 2018-12-08
 ### Added
 * CHANGELOG.md

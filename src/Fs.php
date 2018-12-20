@@ -108,13 +108,14 @@ class Fs
             if (!$target) {
                 $filename = explode('/', $path);
                 $target = end($filename);
-            } else {
-                $bool = self::mkdir($target);
-                if ($bool) {
-//                    Loader::callEvent('copy_path_content_error', [$path, $target]);
-                    return null;
-                }
             }
+//            else {
+//                $bool = self::mkdir($target);
+//                if ($bool) {
+////                    Loader::callEvent('copy_path_content_error', [$path, $target]);
+//                    return null;
+//                }
+//            }
 
             $bool[] = copy($path, $target);
         }
