@@ -2,24 +2,16 @@
 
 namespace BlueFilesystem;
 
-use DirectoryIterator;
-
 class Fs
 {
-    /**
-     * restricted characters for file and directory names
-     * @var string
-     */
-    const RESTRICTED_SYMBOLS = '#[:?*<>"|\\\]#';
+    public function __construct($path, $register = null)
+    {
+        if (is_null($register)) {
+            $this->register = new Register;
+        }
 
-//    public function __construct($path, $register = null)
-//    {
-//        if (is_null($register)) {
-//            $this->register = new Register;
-//        }
-//        
-//        $this->path = $path;
-//    }
+        $this->path = $path;
+    }
 
     /**
      * remove file or directory with all content
@@ -27,47 +19,9 @@ class Fs
      * @param string $path
      * @return boolean|array information that operation was successfully, or NULL if path incorrect
      */
-    public static function delete($path)
+    public function delete($path, $force = false)
     {
-//        Loader::callEvent('delete_path_content_before', [&$path]);
-
-        $bool = [];
-
-        if (!self::exist($path)) {
-            return null;
-        }
-
-        @chmod($path, 0777);
-
-        if (is_dir($path)) {
-            $list = self::readDirectory($path, true);
-            $paths = self::returnPaths($list, true);
-
-            if (isset($paths['file'])) {
-                foreach ($paths['file'] as $val) {
-                    $bool[] = unlink($val);
-                }
-            }
-
-            if (isset($paths['dir'])) {
-                foreach ($paths['dir'] as $val) {
-                    $bool[] = rmdir($val);
-                }
-            }
-
-            rmdir($path);
-        } else {
-            $bool[] = @unlink($path);
-        }
-
-        if (in_array(false, $bool)) {
-//            Loader::callEvent('delete_path_content_error', [$bool, $path]);
-            return false;
-        }
-
-//        Loader::callEvent('delete_path_content_after', $path);
-
-        return $bool;
+        
     }
 
     /**
@@ -78,56 +32,9 @@ class Fs
      * @param string $target
      * @return boolean information that operation was successfully, or NULL if path incorrect
      */
-    public static function copy($path, $target)
+    public function copy($path, $target)
     {
-//        Loader::callEvent('copy_path_content_before', [&$path, &$target]);
-
-        $bool = [];
-
-        if (!self::exist($path)) {
-            return null;
-        }
-
-        if (is_dir($path)) {
-            if (!self::exist($target)) {
-                $bool[] = mkdir($target);
-            }
-
-            $elements = self::readDirectory($path);
-            $paths = self::returnPaths($elements);
-
-            foreach ($paths['dir'] as $dir) {
-                $bool[] = mkdir($dir);
-            }
-
-            foreach ($paths['file'] as $file) {
-                $bool[] = copy($path . "/$file", $target . "/$file");
-            }
-
-        } else {
-            if (!$target) {
-                $filename = explode('/', $path);
-                $target = end($filename);
-            }
-//            else {
-//                $bool = self::mkdir($target);
-//                if ($bool) {
-////                    Loader::callEvent('copy_path_content_error', [$path, $target]);
-//                    return null;
-//                }
-//            }
-
-            $bool[] = copy($path, $target);
-        }
-
-        if (in_array(false, $bool)) {
-//            Loader::callEvent('copy_path_content_error', [$bool, $path, $target]);
-            return false;
-        }
-
-//        Loader::callEvent('copy_path_content_after', [$path, $target]);
-
-        return true;
+        
     }
 
     /**
@@ -137,21 +44,9 @@ class Fs
      * @return boolean
      * @static
      */
-    public static function mkdir($path)
+    public function mkdir($path)
     {
-//        Loader::callEvent('create_directory_before', [&$path]);
-
-        $bool = preg_match(self::RESTRICTED_SYMBOLS, $path);
-
-        if (!$bool) {
-            $bool = mkdir($path);
-//            Loader::callEvent('create_directory_after', $path);
-            return $bool;
-        }
-
-//        Loader::callEvent('create_directory_error', $path);
-
-        return false;
+        
     }
 
     /**
@@ -164,30 +59,9 @@ class Fs
      * @example mkfile('directory/inn', 'file.txt')
      * @example mkfile('directory/inn', 'file.txt', 'Lorem ipsum')
      */
-    public static function mkfile($path, $fileName, $data = null)
+    public function mkfile($path, $fileName, $data = null)
     {
-//        Loader::callEvent('create_file_before', [&$path, &$fileName, &$data]);
-
-        if (!self::exist($path)) {
-            self::mkdir($path);
-        }
-
-        $bool = preg_match(self::RESTRICTED_SYMBOLS, $fileName);
-
-        if (!$bool) {
-            $fileResource = @fopen("$path/$fileName", 'w');
-            fclose($fileResource);
-
-            if ($data) {
-                $bool = file_put_contents("$path/$fileName", $data);
-//                Loader::callEvent('create_file_after', [$path, $fileName]);
-                return $bool;
-            }
-        }
-
-//        Loader::callEvent('create_file_error', [$path, $fileName]);
-
-        return false;
+        
     }
 
     /**
@@ -198,31 +72,9 @@ class Fs
      * @param string $target new path or name
      * @return boolean information that operation was successfully, or NULL if path incorrect
      */
-    public static function rename($source, $target)
+    public function rename($source, $target)
     {
-//        Loader::callEvent('rename_file_or_directory_before', [&$source, &$target]);
-
-        if (!self::exist($source)) {
-//            Loader::callEvent('rename_file_or_directory_error', [$source, 'source']);
-            return null;
-        }
-
-        if (self::exist($target)) {
-//            Loader::callEvent('rename_file_or_directory_error', [$target, 'target']);
-            return false;
-        }
-
-        $bool = preg_match(self::RESTRICTED_SYMBOLS, $target);
-
-        if (!$bool) {
-            $bool = rename($source, $target);
-//            Loader::callEvent('rename_file_or_directory_after', [$source, $target]);
-            return $bool;
-        }
-
-//        Loader::callEvent('rename_file_or_directory_error', [$source, $target]);
-
-        return false;
+        
     }
 
     /**
@@ -232,20 +84,9 @@ class Fs
      * @param string $target
      * @return bool
      */
-    public static function move($source, $target)
+    public function move($source, $target)
     {
-//        Loader::callEvent('move_file_or_directory_before', [&$source, &$target]);
-        $bool = self::copy($source, $target);
-
-        if (!$bool) {
-//            Loader::callEvent('move_file_or_directory_error', [$source, $target]);
-            return false;
-        }
-
-        $bool = self::delete($source);
-//        Loader::callEvent('move_file_or_directory_after', [$source, $target, $bool]);
-
-        return $bool;
+        
     }
 
     /**
@@ -258,31 +99,9 @@ class Fs
      * @example readDirectory('dir/some_dir', TRUE)
      * @example readDirectory(); - read MAIN_PATH destination
      */
-    public static function readDirectory($path, $recursive = false)
+    public function readDirectory($path, $recursive = false)
     {
-        $list = [];
-
-        if (!self::exist($path)) {
-            return [];
-        }
-
-        $iterator = new DirectoryIterator($path);
-
-        /** @var DirectoryIterator $element */
-        foreach ($iterator as $element) {
-            if ($element->isDot()) {
-                continue;
-            }
-
-            if ($recursive && $element->isDir()) {
-                $list[$element->getRealPath()] = self::readDirectory($element->getRealPath(), true);
-            } else {
-                $list[$element->getRealPath()] = $element->getFileInfo();
-            }
-
-        }
-
-        return $list;
+        
     }
 
     /**
@@ -296,41 +115,9 @@ class Fs
      * @example returnPaths($array, '', TRUE)
      * @example returnPaths($array, 'some_dir/dir', TRUE)
      */
-    public static function returnPaths(array $array, $reverse = false)
+    public function returnPaths(array $array, $reverse = false)
     {
-        if ($reverse) {
-            $array = array_reverse($array);
-        }
-
-        $pathList = [];
-
-        foreach ($array as $path => $fileInfo) {
-            if (is_dir($path)) {
-                $list = self::returnPaths($fileInfo);
-
-                foreach ($list as $element => $value) {
-                    if ($element === 'file') {
-                        foreach ($value as $file) {
-                            $pathList['file'][] = $file;
-                        }
-                    }
-
-                    if ($element === 'dir') {
-                        foreach ($value as $dir) {
-                            $pathList['dir'][] = $dir;
-                        }
-                    }
-
-                }
-                $pathList['dir'][] = $path;
-
-            } else {
-                /** @var DirectoryIterator $fileInfo */
-                $pathList['file'][] = $fileInfo->getRealPath();
-            }
-        }
-
-        return $pathList;
+        
     }
 
     /**
@@ -339,7 +126,7 @@ class Fs
      * @param string $path
      * @return boolean TRUE if exists, FALSE if not
      */
-    public static function exist($path)
+    public function exist($path)
     {
         return file_exists($path);
     }
