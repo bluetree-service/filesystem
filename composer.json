@@ -5,7 +5,7 @@
     "description": "",
     "keywords": [],
     "homepage": "https://github.com/bluetree-service/benchmark",
-    "version": "0.1.1.0",
+    "version": "0.2.0.0",
     "authors": [
         {
             "name": "Michał Adamiak",
@@ -15,7 +15,7 @@
         }
     ],
     "require": {
-        "php": ">=5.6.0",
+        "php": ">=7.1.0",
         "bluetree-service/register": "0.3.*",
         "bluetree-service/container": "0.1.*",
         "bluetree-service/event": "0.7.*",
