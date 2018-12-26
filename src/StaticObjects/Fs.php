@@ -3,6 +3,7 @@
 namespace BlueFilesystem\StaticObjects;
 
 use DirectoryIterator;
+use BlueEvent\Event\Base\Interfaces\EventDispatcherInterface;
 
 class Fs
 {
@@ -10,55 +11,94 @@ class Fs
      * restricted characters for file and directory names
      * @var string
      */
-    const RESTRICTED_SYMBOLS = '#[:?*<>"|\\\]#';
+    public const RESTRICTED_SYMBOLS = '#[:?*<>"|\\\]#';
+
+    /**
+     * @var EventDispatcherInterface
+     */
+    protected static $event;
 
     /**
      * remove file or directory with all content
      *
      * @param string $path
-     * @return boolean|array information that operation was successfully, or NULL if path incorrect
+     * @param bool $force
+     * @return array information that operation was successfully, or NULL if path incorrect
      */
-    public static function delete($path)
+    public static function delete(string $path, bool $force = false): array
     {
-//        Loader::callEvent('delete_path_content_before', [&$path]);
+        self::triggerEvent('delete_path_content_before', [&$path]);
 
-        $bool = [];
+        $operationList = [];
 
         if (!self::exist($path)) {
-            return null;
+            return [];
         }
 
-        @chmod($path, 0777);
+        if ($force) {
+            @chmod($path, 0777);
+        }
 
         if (is_dir($path)) {
             $list = self::readDirectory($path, true);
             $paths = self::returnPaths($list, true);
 
+            self::triggerEvent('delete_paths_before', [&$paths]);
+
             if (isset($paths['file'])) {
                 foreach ($paths['file'] as $val) {
-                    $bool[] = unlink($val);
+                    $operationList = self::removeFile($operationList, $val);
                 }
             }
 
             if (isset($paths['dir'])) {
                 foreach ($paths['dir'] as $val) {
-                    $bool[] = rmdir($val);
+                    $operationList = self::removeDir($operationList, $val);
                 }
             }
 
-            rmdir($path);
+            $operationList = self::removeDir($operationList, $path);
         } else {
-            $bool[] = @unlink($path);
+            $operationList = self::removeFile($operationList, $path);
         }
 
-        if (in_array(false, $bool)) {
-//            Loader::callEvent('delete_path_content_error', [$bool, $path]);
-            return false;
+        self::triggerEvent('delete_path_content_after', [$operationList, $path]);
+
+        return $operationList;
+    }
+
+    /**
+     * @param array $operationList
+     * @param string $path
+     * @return array
+     */
+    protected static function removeFile(array $operationList, string $path): array
+    {
+        try {
+            $operationList[$path] = unlink($path);
+        } catch (\Throwable $exception) {
+            self::triggerEvent('delete_path_content_exception', [$operationList, $path, $exception]);
+            $operationList[$path] = $exception->getMessage();
         }
 
-//        Loader::callEvent('delete_path_content_after', $path);
+        return $operationList;
+    }
 
-        return $bool;
+    /**
+     * @param array $operationList
+     * @param string $path
+     * @return array
+     */
+    protected static function removeDir(array $operationList, string $path): array
+    {
+        try {
+            $operationList[$path] = rmdir($path);
+        } catch (\Throwable $exception) {
+            self::triggerEvent('delete_path_content_exception', [$operationList, $path, $exception]);
+            $operationList[$path] = $exception->getMessage();
+        }
+
+        return $operationList;
     }
 
     /**
@@ -71,7 +111,7 @@ class Fs
      */
     public static function copy($path, $target)
     {
-//        Loader::callEvent('copy_path_content_before', [&$path, &$target]);
+        self::triggerEvent('copy_path_content_before', [&$path, &$target]);
 
         $bool = [];
 
@@ -103,7 +143,7 @@ class Fs
 //            else {
 //                $bool = self::mkdir($target);
 //                if ($bool) {
-////                    Loader::callEvent('copy_path_content_error', [$path, $target]);
+////                    self::triggerEvent('copy_path_content_error', [$path, $target]);
 //                    return null;
 //                }
 //            }
@@ -112,11 +152,11 @@ class Fs
         }
 
         if (in_array(false, $bool)) {
-//            Loader::callEvent('copy_path_content_error', [$bool, $path, $target]);
+//            self::triggerEvent('copy_path_content_error', [$bool, $path, $target]);
             return false;
         }
 
-//        Loader::callEvent('copy_path_content_after', [$path, $target]);
+        self::triggerEvent('copy_path_content_after', [$path, $target]);
 
         return true;
     }
@@ -130,17 +170,17 @@ class Fs
      */
     public static function mkdir($path)
     {
-//        Loader::callEvent('create_directory_before', [&$path]);
+        self::triggerEvent('create_directory_before', [&$path]);
 
         $bool = preg_match(self::RESTRICTED_SYMBOLS, $path);
 
         if (!$bool) {
             $bool = mkdir($path);
-//            Loader::callEvent('create_directory_after', $path);
+//            self::triggerEvent('create_directory_after', $path);
             return $bool;
         }
 
-//        Loader::callEvent('create_directory_error', $path);
+        self::triggerEvent('create_directory_error', $path);
 
         return false;
     }
@@ -157,7 +197,7 @@ class Fs
      */
     public static function mkfile($path, $fileName, $data = null)
     {
-//        Loader::callEvent('create_file_before', [&$path, &$fileName, &$data]);
+        self::triggerEvent('create_file_before', [&$path, &$fileName, &$data]);
 
         if (!self::exist($path)) {
             self::mkdir($path);
@@ -171,12 +211,12 @@ class Fs
 
             if ($data) {
                 $bool = file_put_contents("$path/$fileName", $data);
-//                Loader::callEvent('create_file_after', [$path, $fileName]);
+//                self::triggerEvent('create_file_after', [$path, $fileName]);
                 return $bool;
             }
         }
 
-//        Loader::callEvent('create_file_error', [$path, $fileName]);
+        self::triggerEvent('create_file_error', [$path, $fileName]);
 
         return false;
     }
@@ -191,15 +231,15 @@ class Fs
      */
     public static function rename($source, $target)
     {
-//        Loader::callEvent('rename_file_or_directory_before', [&$source, &$target]);
+        self::triggerEvent('rename_file_or_directory_before', [&$source, &$target]);
 
         if (!self::exist($source)) {
-//            Loader::callEvent('rename_file_or_directory_error', [$source, 'source']);
+//            self::triggerEvent('rename_file_or_directory_error', [$source, 'source']);
             return null;
         }
 
         if (self::exist($target)) {
-//            Loader::callEvent('rename_file_or_directory_error', [$target, 'target']);
+//            self::triggerEvent('rename_file_or_directory_error', [$target, 'target']);
             return false;
         }
 
@@ -207,11 +247,11 @@ class Fs
 
         if (!$bool) {
             $bool = rename($source, $target);
-//            Loader::callEvent('rename_file_or_directory_after', [$source, $target]);
+//            self::triggerEvent('rename_file_or_directory_after', [$source, $target]);
             return $bool;
         }
 
-//        Loader::callEvent('rename_file_or_directory_error', [$source, $target]);
+        self::triggerEvent('rename_file_or_directory_error', [$source, $target]);
 
         return false;
     }
@@ -225,16 +265,16 @@ class Fs
      */
     public static function move($source, $target)
     {
-//        Loader::callEvent('move_file_or_directory_before', [&$source, &$target]);
+        self::triggerEvent('move_file_or_directory_before', [&$source, &$target]);
         $bool = self::copy($source, $target);
 
         if (!$bool) {
-//            Loader::callEvent('move_file_or_directory_error', [$source, $target]);
+//            self::triggerEvent('move_file_or_directory_error', [$source, $target]);
             return false;
         }
 
         $bool = self::delete($source);
-//        Loader::callEvent('move_file_or_directory_after', [$source, $target, $bool]);
+        self::triggerEvent('move_file_or_directory_after', [$source, $target, $bool]);
 
         return $bool;
     }
@@ -336,16 +376,23 @@ class Fs
     }
 
     /**
+     * @param EventDispatcherInterface $eventHandler
+     */
+    public static function configureEventHandler(EventDispatcherInterface $eventHandler): void
+    {
+        if ($eventHandler) {
+            self::$event = $eventHandler;
+        }
+    }
+
+    /**
      * @param string $name
      * @param array $data
-     * @return $this
      */
-    protected function callEvent($name, array $data)
+    protected static function triggerEvent(string $name, array $data): void
     {
-        if (!is_null($this->event)) {
-            $this->event->callEvent($name, $data);
+        if (self::$event instanceof EventDispatcherInterface) {
+            self::$event->triggerEvent($name, $data);
         }
-
-        return $this;
     }
 }
