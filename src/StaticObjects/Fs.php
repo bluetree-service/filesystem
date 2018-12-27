@@ -5,14 +5,8 @@ namespace BlueFilesystem\StaticObjects;
 use DirectoryIterator;
 use BlueEvent\Event\Base\Interfaces\EventDispatcherInterface;
 
-class Fs
+class Fs implements FsInterface
 {
-    /**
-     * restricted characters for file and directory names
-     * @var string
-     */
-    public const RESTRICTED_SYMBOLS = '#[:?*<>"|\\\]#';
-
     /**
      * @var EventDispatcherInterface
      */
@@ -27,7 +21,7 @@ class Fs
      */
     public static function delete(string $path, bool $force = false): array
     {
-        self::triggerEvent('delete_path_content_before', [&$path]);
+        self::triggerEvent(self::DELETE_PATH_CONTENT_BEFORE, [&$path]);
 
         $operationList = [];
 
@@ -35,34 +29,64 @@ class Fs
             return [];
         }
 
-        if ($force) {
-            @chmod($path, 0777);
-        }
+        $isDir = \is_dir($path);
 
-        if (is_dir($path)) {
+        if ($isDir) {
             $list = self::readDirectory($path, true);
             $paths = self::returnPaths($list, true);
 
-            self::triggerEvent('delete_paths_before', [&$paths]);
+            self::setForceMode($paths, $force);
 
-            if (isset($paths['file'])) {
-                foreach ($paths['file'] as $val) {
-                    $operationList = self::removeFile($operationList, $val);
-                }
-            }
+            self::triggerEvent(self::DELETE_PATHS_BEFORE, [&$paths]);
 
-            if (isset($paths['dir'])) {
-                foreach ($paths['dir'] as $val) {
-                    $operationList = self::removeDir($operationList, $val);
-                }
-            }
-
-            $operationList = self::removeDir($operationList, $path);
-        } else {
-            $operationList = self::removeFile($operationList, $path);
+            $operationList = self::processRemoving($operationList, $paths, 'file');
+            $operationList = self::processRemoving($operationList, $paths, 'dir');
         }
 
-        self::triggerEvent('delete_path_content_after', [$operationList, $path]);
+        $operationList = self::remove($operationList, $path, $isDir);
+
+        self::triggerEvent(self::DELETE_PATH_CONTENT_AFTER, [$operationList, $path]);
+
+        return $operationList;
+    }
+
+    /**
+     * @param array $paths
+     * @param bool $force
+     */
+    protected static function setForceMode(array $paths, bool $force): void
+    {
+        if (!$force) {
+            return;
+        }
+
+        foreach ($paths['file'] as $path) {
+            chmod($path, 0777);
+        }
+        foreach ($paths['dir'] as $path) {
+            chmod($path, 0777);
+        }
+    }
+
+    /**
+     * @param array $operationList
+     * @param array $paths
+     * @param string $type
+     * @return array
+     */
+    protected static function processRemoving(array $operationList, array $paths, string $type): array
+    {
+        $isDir = true;
+
+        if ($type === 'file') {
+            $isDir = false;
+        }
+
+        if (isset($paths[$type])) {
+            foreach ($paths[$type] as $val) {
+                $operationList = self::remove($operationList, $val, $isDir);
+            }
+        }
 
         return $operationList;
     }
@@ -70,32 +94,20 @@ class Fs
     /**
      * @param array $operationList
      * @param string $path
+     * @param bool $isDir
      * @return array
      */
-    protected static function removeFile(array $operationList, string $path): array
+    protected static function remove(array $operationList, string $path, bool $isDir): array
     {
         try {
-            $operationList[$path] = unlink($path);
+            if ($isDir) {
+                $operationList[$path] = rmdir($path);
+            } else {
+                $operationList[$path] = unlink($path);
+            }
         } catch (\Throwable $exception) {
-            self::triggerEvent('delete_path_content_exception', [$operationList, $path, $exception]);
             $operationList[$path] = $exception->getMessage();
-        }
-
-        return $operationList;
-    }
-
-    /**
-     * @param array $operationList
-     * @param string $path
-     * @return array
-     */
-    protected static function removeDir(array $operationList, string $path): array
-    {
-        try {
-            $operationList[$path] = rmdir($path);
-        } catch (\Throwable $exception) {
-            self::triggerEvent('delete_path_content_exception', [$operationList, $path, $exception]);
-            $operationList[$path] = $exception->getMessage();
+            self::triggerEvent(self::DELETE_PATH_CONTENT_EXCEPTION, [&$operationList, $path, $exception]);
         }
 
         return $operationList;
@@ -111,6 +123,7 @@ class Fs
      */
     public static function copy($path, $target)
     {
+        //self::setForceMode($paths, $force);
         self::triggerEvent('copy_path_content_before', [&$path, &$target]);
 
         $bool = [];
@@ -170,6 +183,7 @@ class Fs
      */
     public static function mkdir($path)
     {
+        //self::setForceMode($paths, $force);
         self::triggerEvent('create_directory_before', [&$path]);
 
         $bool = preg_match(self::RESTRICTED_SYMBOLS, $path);
@@ -197,6 +211,7 @@ class Fs
      */
     public static function mkfile($path, $fileName, $data = null)
     {
+        //self::setForceMode($paths, $force);
         self::triggerEvent('create_file_before', [&$path, &$fileName, &$data]);
 
         if (!self::exist($path)) {
@@ -231,6 +246,7 @@ class Fs
      */
     public static function rename($source, $target)
     {
+        //elf::setForceMode($paths, $force);
         self::triggerEvent('rename_file_or_directory_before', [&$source, &$target]);
 
         if (!self::exist($source)) {
@@ -265,6 +281,7 @@ class Fs
      */
     public static function move($source, $target)
     {
+        //elf::setForceMode($paths, $force);
         self::triggerEvent('move_file_or_directory_before', [&$source, &$target]);
         $bool = self::copy($source, $target);
 
