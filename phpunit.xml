@@ -4,11 +4,18 @@
         <testsuite name="bluetree-filesystem">
             <directory>tests</directory>
         </testsuite>
+        <testsuite name="static">
+            <file>tests/StaticFsDelTest.php</file>
+            <file>tests/StaticFsCopyTest.php</file>
+            <file>tests/StructureTest.php</file>
+        </testsuite>
     </testsuites>
     <logging>
         <log type="coverage-clover" target="build/logs/clover.xml"/>
     </logging>
-    <whitelist>
-        
-    </whitelist>
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
 </phpunit>

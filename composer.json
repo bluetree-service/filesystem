@@ -16,9 +16,9 @@
     ],
     "require": {
         "php": ">=7.1.0",
-        "bluetree-service/register": "0.3.*",
-        "bluetree-service/container": "0.1.*",
-        "bluetree-service/event": "0.7.*",
+        "bluetree-service/register": "^0.3",
+        "bluetree-service/container": "0.1.0.3",
+        "bluetree-service/event": "^v0.7",
         "bluetree-service/simple-log": "0.7.*"
     },
     "autoload": {
@@ -35,6 +35,13 @@
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",
-        "bluetree-service/clover-reporter": "0.1.*"
+        "bluetree-service/clover-reporter": "v0.1.4.2",
+        "satooshi/php-coveralls": "^2.0",
+        "phpunit/phpunit": "^7.5"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BlueFilesystemTest\\": "tests/"
+        }
     }
 }

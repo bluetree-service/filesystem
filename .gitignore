@@ -1,2 +1,5 @@
 vendor
 build
+composer.lock
+tests/playground/*
+!tests/playground/.gitkeep
