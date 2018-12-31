@@ -2,7 +2,6 @@
 
 namespace BlueFilesystem\StaticObjects;
 
-use DirectoryIterator;
 use BlueEvent\Event\Base\Interfaces\EventDispatcherInterface;
 
 class Fs implements FsInterface
@@ -25,15 +24,15 @@ class Fs implements FsInterface
 
         $operationList = [];
 
-        if (!self::exist($path)) {
+        if (!Structure::exist($path)) {
             return [];
         }
 
         $isDir = \is_dir($path);
 
         if ($isDir) {
-            $list = self::readDirectory($path, true);
-            $paths = self::returnPaths($list, true);
+            $list = Structure::readDirectory($path, true);
+            $paths = Structure::returnPaths($list, true);
 
             self::setForceMode($paths, $force);
 
@@ -117,61 +116,74 @@ class Fs implements FsInterface
      * copy file or directory to given source
      * if source directory not exists, create it
      *
-     * @param string $path
+     * @param string $source
      * @param string $target
-     * @return boolean information that operation was successfully, or NULL if path incorrect
+     * @param bool $force
+     * @return array
      */
-    public static function copy($path, $target)
+    public static function copy(string $source, string $target, bool $force = false): array
     {
-        //self::setForceMode($paths, $force);
-        self::triggerEvent('copy_path_content_before', [&$path, &$target]);
+        self::triggerEvent(self::COPY_PATH_CONTENT_BEFORE, [&$source, &$target]);
 
-        $bool = [];
+        $operationList = [];
 
-        if (!self::exist($path)) {
-            return null;
+        if (!Structure::exist($source)) {
+            return [];
         }
 
-        if (is_dir($path)) {
-            if (!self::exist($target)) {
-                $bool[] = mkdir($target);
+        if (is_dir($source)) {
+            $pathParts = \explode(DIRECTORY_SEPARATOR, $source);
+            $dirToCopy = DIRECTORY_SEPARATOR . \end($pathParts);
+
+            if (!Structure::exist($target)) {
+                $operationList['mkdir:' . $target] = \mkdir($target);
+                $dirToCopy = '';
             }
 
-            $elements = self::readDirectory($path);
-            $paths = self::returnPaths($elements);
+            $elements = Structure::readDirectory($source, true);
+            $paths = Structure::returnPaths($elements);
+
+            self::setForceMode($paths, $force);
+
+            self::triggerEvent(self::COPY_PATHS_BEFORE, [&$source, &$target]);
 
             foreach ($paths['dir'] as $dir) {
-                $bool[] = mkdir($dir);
+                $creationDir[] = $target . $dirToCopy . \str_replace($source, '', $dir);
+            }
+            $creationDir[] = $target . $dirToCopy;
+            $creationDirRevert = \array_reverse($creationDir);
+
+            foreach ($creationDirRevert as $dir) {
+                try {
+                    if (!Structure::exist($dir)) {
+                        $operationList['mkdir:' . $dir] = \mkdir($dir);
+                    }
+                } catch (\Throwable $exception) {
+                    $operationList['mkdir:' . $dir] = $exception->getMessage();
+                    self::triggerEvent(self::COPY_CREATE_PATH_EXCEPTION, [&$operationList, $exception]);
+                }
             }
 
-            foreach ($paths['file'] as $file) {
-                $bool[] = copy($path . "/$file", $target . "/$file");
-            }
 
+            foreach ($paths['file'] as $mainFile) {
+                $file = \str_replace($source, '', $mainFile);
+                $newTarget = $target . $dirToCopy . $file;
+                $operationList['copy:' . $mainFile . ':' . $newTarget] = copy($mainFile, $newTarget);
+            }
         } else {
-            if (!$target) {
-                $filename = explode('/', $path);
-                $target = end($filename);
+            $key = $source . PATH_SEPARATOR . $target;
+
+            try {
+                $operationList['copy:' . $key] = copy($source, $target);
+            } catch (\Throwable $exception) {
+                $operationList['copy:' . $key] = $exception->getMessage();
+                self::triggerEvent(self::COPY_PATH_CONTENT_EXCEPTION, [&$operationList, $key, $exception]);
             }
-//            else {
-//                $bool = self::mkdir($target);
-//                if ($bool) {
-////                    self::triggerEvent('copy_path_content_error', [$path, $target]);
-//                    return null;
-//                }
-//            }
-
-            $bool[] = copy($path, $target);
         }
 
-        if (in_array(false, $bool)) {
-//            self::triggerEvent('copy_path_content_error', [$bool, $path, $target]);
-            return false;
-        }
+        self::triggerEvent(self::COPY_PATH_CONTENT_AFTER, [$source, $target]);
 
-        self::triggerEvent('copy_path_content_after', [$path, $target]);
-
-        return true;
+        return $operationList;
     }
 
     /**
@@ -183,6 +195,7 @@ class Fs implements FsInterface
      */
     public static function mkdir($path)
     {
+        //recursiveMkdir
         //self::setForceMode($paths, $force);
         self::triggerEvent('create_directory_before', [&$path]);
 
@@ -214,7 +227,7 @@ class Fs implements FsInterface
         //self::setForceMode($paths, $force);
         self::triggerEvent('create_file_before', [&$path, &$fileName, &$data]);
 
-        if (!self::exist($path)) {
+        if (!Structure::exist($path)) {
             self::mkdir($path);
         }
 
@@ -249,12 +262,12 @@ class Fs implements FsInterface
         //elf::setForceMode($paths, $force);
         self::triggerEvent('rename_file_or_directory_before', [&$source, &$target]);
 
-        if (!self::exist($source)) {
+        if (!Structure::exist($source)) {
 //            self::triggerEvent('rename_file_or_directory_error', [$source, 'source']);
             return null;
         }
 
-        if (self::exist($target)) {
+        if (Structure::exist($target)) {
 //            self::triggerEvent('rename_file_or_directory_error', [$target, 'target']);
             return false;
         }
@@ -297,102 +310,6 @@ class Fs implements FsInterface
     }
 
     /**
-     * read directory content, (optionally all sub folders)
-     *
-     * @param string $path
-     * @param boolean $recursive
-     * @return array
-     * @example readDirectory('dir/some_dir')
-     * @example readDirectory('dir/some_dir', TRUE)
-     * @example readDirectory(); - read MAIN_PATH destination
-     */
-    public static function readDirectory($path, $recursive = false)
-    {
-        $list = [];
-
-        if (!self::exist($path)) {
-            return [];
-        }
-
-        $iterator = new DirectoryIterator($path);
-
-        /** @var DirectoryIterator $element */
-        foreach ($iterator as $element) {
-            if ($element->isDot()) {
-                continue;
-            }
-
-            if ($recursive && $element->isDir()) {
-                $list[$element->getRealPath()] = self::readDirectory($element->getRealPath(), true);
-            } else {
-                $list[$element->getRealPath()] = $element->getFileInfo();
-            }
-
-        }
-
-        return $list;
-    }
-
-    /**
-     * transform array wit directory/files tree to list of paths grouped on files and directories
-     *
-     * @param array $array array to transform
-     * @param boolean $reverse if TRUE revert array (required for deleting)
-     * @internal param string $path base path for elements, if emty use paths from transformed structure
-     * @return array array with path list for files and directories
-     * @example returnPaths($array, '')
-     * @example returnPaths($array, '', TRUE)
-     * @example returnPaths($array, 'some_dir/dir', TRUE)
-     */
-    public static function returnPaths(array $array, $reverse = false)
-    {
-        if ($reverse) {
-            $array = array_reverse($array);
-        }
-
-        $pathList = [];
-
-        foreach ($array as $path => $fileInfo) {
-            if (is_dir($path)) {
-                $list = self::returnPaths($fileInfo);
-
-                foreach ($list as $element => $value) {
-                    if ($element === 'file') {
-                        foreach ($value as $file) {
-                            $pathList['file'][] = $file;
-                        }
-                    }
-
-                    if ($element === 'dir') {
-                        foreach ($value as $dir) {
-                            $pathList['dir'][] = $dir;
-                        }
-                    }
-
-                }
-                $pathList['dir'][] = $path;
-
-            } else {
-                /** @var DirectoryIterator $fileInfo */
-                $pathList['file'][] = $fileInfo->getRealPath();
-            }
-        }
-
-        return $pathList;
-    }
-
-    /**
-     * check that file exists
-     *
-     * @param string $path
-     * @return boolean TRUE if exists, FALSE if not
-     */
-    public static function exist($path)
-    {
-        return file_exists($path);
-    }
-
-    /**
      * @param EventDispatcherInterface $eventHandler
      */
     public static function configureEventHandler(EventDispatcherInterface $eventHandler): void
@@ -400,6 +317,14 @@ class Fs implements FsInterface
         if ($eventHandler) {
             self::$event = $eventHandler;
         }
+    }
+
+    /**
+     * disable event handler by removing it from protected variable
+     */
+    public static function removeEventHandler(): void
+    {
+        self::$event = null;
     }
 
     /**
