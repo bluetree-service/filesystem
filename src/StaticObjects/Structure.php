@@ -5,16 +5,51 @@ namespace BlueFilesystem\StaticObjects;
 class Structure implements FsInterface
 {
     /**
-     * read directory content, (optionally all sub folders)
+     * @var array
+     */
+    protected $dirTree = [];
+
+    /**
+     * @var array
+     */
+    protected $paths = [
+        'dir' => [],
+        'file' => [],
+    ];
+
+    /**
+     * @param string $path
+     * @param bool $recursive
+     * @example new Structure('dir/some_dir')
+     * @example new Structure('dir/some_dir', true)
+     */
+    public function __construct(string $path, bool $recursive = false)
+    {
+        $this->readDirectory($path, $recursive);
+    }
+
+    /**
+     * re read directory content, (optionally all sub folders)
      *
      * @param string $path
      * @param boolean $recursive
      * @return array
      * @example readDirectory('dir/some_dir')
      * @example readDirectory('dir/some_dir', true)
-     * @example readDirectory(); - read MAIN_PATH destination
      */
-    public static function readDirectory(string $path, bool $recursive = false): array
+    public function readDirectory(string $path, bool $recursive = false): array
+    {
+        $this->dirTree = $this->readDirectoryRecursive($path, $recursive);
+
+        return $this->dirTree;
+    }
+
+    /**
+     * @param string $path
+     * @param boolean $recursive
+     * @return array
+     */
+    protected function readDirectoryRecursive(string $path, bool $recursive): array
     {
         $list = [];
 
@@ -31,7 +66,7 @@ class Structure implements FsInterface
             }
 
             if ($recursive && $element->isDir()) {
-                $list[$element->getRealPath()] = self::readDirectory($element->getRealPath(), true);
+                $list[$element->getRealPath()] = $this->readDirectoryRecursive($element->getRealPath(), true);
             } else {
                 $list[$element->getRealPath()] = $element->getFileInfo();
             }
@@ -41,22 +76,54 @@ class Structure implements FsInterface
     }
 
     /**
+     * @return array
+     */
+    public function getReadDirectory(): array
+    {
+        return $this->dirTree;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPaths(): array
+    {
+        return $this->paths;
+    }
+
+    /**
      * transform array wit directory/files tree to list of paths grouped on files and directories
      *
-     * @param array $array array to transform
      * @param boolean $reverse if TRUE revert array (required for deleting)
      * @internal param string $path base path for elements, if empty use paths from transformed structure
      * @return array array with path list for files and directories
-     * @example returnPaths($array, '')
-     * @example returnPaths($array, '', true)
-     * @example returnPaths($array, 'some_dir/dir', true)
+     * @example returnPaths(true)
+     * @example returnPaths()
      */
-    public static function returnPaths(array $array, bool $reverse = false): array
+    public function returnPaths(bool $reverse = false): array
     {
+        $array = $this->dirTree;
+
         if ($reverse) {
-            $array = array_reverse($array);
+            $array = \array_reverse($array);
         }
 
+        $this->paths = $this->returnPathsRecursive($array);
+
+        return $this->paths;
+    }
+
+    /**
+     * transform array wit directory/files tree to list of paths grouped on files and directories
+     *
+     * @param array $array array to transform
+     * @internal param string $path base path for elements, if empty use paths from transformed structure
+     * @return array array with path list for files and directories
+     * @example returnPaths(true)
+     * @example returnPaths()
+     */
+    protected function returnPathsRecursive(array $array): array
+    {
         $pathList = [
             'dir' => [],
             'file' => [],
@@ -64,12 +131,12 @@ class Structure implements FsInterface
 
         foreach ($array as $path => $fileInfo) {
             if (\is_array($fileInfo) && \is_dir($path)) {
-                $list = self::returnPaths($fileInfo);
+                $list = $this->returnPathsRecursive($fileInfo);
 
                 /** @var string $element */
                 foreach ($list as $element => $value) {
-                    $pathList = self::setPath($pathList, $element, $value, 'file');
-                    $pathList = self::setPath($pathList, $element, $value, 'dir');
+                    $pathList = $this->setPath($pathList, $element, $value, 'file');
+                    $pathList = $this->setPath($pathList, $element, $value, 'dir');
                 }
 
                 $pathList['dir'][] = $path;
@@ -102,7 +169,7 @@ class Structure implements FsInterface
      * @param string $type
      * @return array
      */
-    protected static function setPath(array $pathList, string $key, array $value, string $type): array
+    protected function setPath(array $pathList, string $key, array $value, string $type): array
     {
         if ($key === $type) {
             foreach ($value as $path) {
