@@ -31,8 +31,8 @@ class Fs implements FsInterface
         $isDir = \is_dir($path);
 
         if ($isDir) {
-            $list = Structure::readDirectory($path, true);
-            $paths = Structure::returnPaths($list, true);
+            $list = new Structure($path, true);
+            $paths = $list->returnPaths(true);
 
             self::setForceMode($paths, $force);
 
@@ -140,8 +140,8 @@ class Fs implements FsInterface
                 $dirToCopy = '';
             }
 
-            $elements = Structure::readDirectory($source, true);
-            $paths = Structure::returnPaths($elements);
+            $list = new Structure($source, true);
+            $paths = $list->returnPaths(true);
 
             self::setForceMode($paths, $force);
 
