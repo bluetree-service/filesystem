@@ -125,63 +125,110 @@ class Fs implements FsInterface
     {
         self::triggerEvent(self::COPY_PATH_CONTENT_BEFORE, [&$source, &$target]);
 
-        $operationList = [];
-
         if (!Structure::exist($source)) {
             return [];
         }
 
         if (is_dir($source)) {
-            $pathParts = \explode(DIRECTORY_SEPARATOR, $source);
-            $dirToCopy = DIRECTORY_SEPARATOR . \end($pathParts);
-
-            if (!Structure::exist($target)) {
-                $operationList['mkdir:' . $target] = \mkdir($target);
-                $dirToCopy = '';
-            }
-
-            $list = new Structure($source, true);
-            $paths = $list->returnPaths(true);
-
-            self::setForceMode($paths, $force);
-
-            self::triggerEvent(self::COPY_PATHS_BEFORE, [&$source, &$target]);
-
-            foreach ($paths['dir'] as $dir) {
-                $creationDir[] = $target . $dirToCopy . \str_replace($source, '', $dir);
-            }
-            $creationDir[] = $target . $dirToCopy;
-            $creationDirRevert = \array_reverse($creationDir);
-
-            foreach ($creationDirRevert as $dir) {
-                try {
-                    if (!Structure::exist($dir)) {
-                        $operationList['mkdir:' . $dir] = \mkdir($dir);
-                    }
-                } catch (\Throwable $exception) {
-                    $operationList['mkdir:' . $dir] = $exception->getMessage();
-                    self::triggerEvent(self::COPY_CREATE_PATH_EXCEPTION, [&$operationList, $exception]);
-                }
-            }
-
-
-            foreach ($paths['file'] as $mainFile) {
-                $file = \str_replace($source, '', $mainFile);
-                $newTarget = $target . $dirToCopy . $file;
-                $operationList['copy:' . $mainFile . ':' . $newTarget] = copy($mainFile, $newTarget);
-            }
+            $operationList = self::copyDir($source, $target, $force);
         } else {
-            $key = $source . PATH_SEPARATOR . $target;
+            $operationList = self::copyFile($source, $target);
+        }
 
-            try {
-                $operationList['copy:' . $key] = copy($source, $target);
-            } catch (\Throwable $exception) {
-                $operationList['copy:' . $key] = $exception->getMessage();
-                self::triggerEvent(self::COPY_PATH_CONTENT_EXCEPTION, [&$operationList, $key, $exception]);
-            }
+        return $operationList;
+    }
+
+    /**
+     * @param string $source
+     * @param string $target
+     * @return array
+     */
+    protected static function copyFile(string $source, string $target): array
+    {
+        $operationList = [];
+        $key = $source . PATH_SEPARATOR . $target;
+
+        try {
+            $operationList['copy:' . $key] = \copy($source, $target);
+        } catch (\Throwable $exception) {
+            $operationList['copy:' . $key] = $exception->getMessage();
+            self::triggerEvent(self::COPY_PATH_CONTENT_EXCEPTION, [&$operationList, $key, $exception]);
         }
 
         self::triggerEvent(self::COPY_PATH_CONTENT_AFTER, [$source, $target]);
+
+        return $operationList;
+    }
+
+    /**
+     * @param string $source
+     * @param string $target
+     * @param bool $force
+     * @return array
+     */
+    protected static function copyDir(string $source, string $target, bool $force): array
+    {
+        $operationList = [];
+        $pathParts = \explode(DIRECTORY_SEPARATOR, $source);
+        $dirToCopy = DIRECTORY_SEPARATOR . \end($pathParts);
+
+        if (!Structure::exist($target)) {
+            $operationList['mkdir:' . $target] = \mkdir($target);
+            $dirToCopy = '';
+        }
+
+        $list = new Structure($source, true);
+        $paths = $list->returnPaths(true);
+
+        self::setForceMode($paths, $force);
+
+        self::triggerEvent(self::COPY_PATHS_BEFORE, [&$source, &$target]);
+
+        $operationList = self::buildDirStructure($paths['dir'], $source, $target, $dirToCopy, $operationList);
+
+        foreach ($paths['file'] as $mainFile) {
+            $file = \str_replace($source, '', $mainFile);
+            $newTarget = $target . $dirToCopy . $file;
+            $operationList['copy:' . $mainFile . ':' . $newTarget] = \copy($mainFile, $newTarget);
+        }
+
+        self::triggerEvent(self::COPY_PATH_CONTENT_AFTER, [$source, $target]);
+
+        return $operationList;
+    }
+
+    /**
+     * @param array $dirPaths
+     * @param string $source
+     * @param string $target
+     * @param string $dirToCopy
+     * @param array $operationList
+     * @return array
+     */
+    protected static function buildDirStructure(
+        array $dirPaths,
+        string $source,
+        string $target,
+        string $dirToCopy,
+        array $operationList
+    ): array {
+        foreach ($dirPaths as $dir) {
+            $creationDir[] = $target . $dirToCopy . \str_replace($source, '', $dir);
+        }
+
+        $creationDir[] = $target . $dirToCopy;
+        $creationDirRevert = \array_reverse($creationDir);
+
+        foreach ($creationDirRevert as $dir) {
+            try {
+                if (!Structure::exist($dir)) {
+                    $operationList['mkdir:' . $dir] = \mkdir($dir);
+                }
+            } catch (\Throwable $exception) {
+                $operationList['mkdir:' . $dir] = $exception->getMessage();
+                self::triggerEvent(self::COPY_CREATE_PATH_EXCEPTION, [&$operationList, $exception]);
+            }
+        }
 
         return $operationList;
     }

@@ -40,55 +40,47 @@ class StructureTest extends TestCase
     {
         $structure = new Structure(__DIR__ . '/test-dirs/del', true);
         $list = $structure->returnPaths();
-
-        $this->assertEquals(
-            [
-                'file' => [
-                    __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file',
-                    __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file2',
-                    __DIR__ . '/test-dirs/del/file',
-                    __DIR__ . '/test-dirs/del/2/2-1/2-1-1/file',
-                    __DIR__ . '/test-dirs/del/2/2-1/2-1-2/file',
-                    __DIR__ . '/test-dirs/del/2/2-1/file',
-                ],
-                'dir'  => [
-                    __DIR__ . '/test-dirs/del/1/1-1/1-1-1',
-                    __DIR__ . '/test-dirs/del/1/1-1',
-                    __DIR__ . '/test-dirs/del/1',
-                    __DIR__ . '/test-dirs/del/2/2-1/2-1-1',
-                    __DIR__ . '/test-dirs/del/2/2-1/2-1-2',
-                    __DIR__ . '/test-dirs/del/2/2-1',
-                    __DIR__ . '/test-dirs/del/2',
-                ],
-            ],
-            $list
-        );
+        
+        $this->assertNotEmpty($list);
+        $this->checkEntries($list);
 
         $structure->returnPaths(true);
         $list = $structure->getPaths();
 
-        $this->assertEquals(
-            [
-                'file' => [
-                    __DIR__ . '/test-dirs/del/2/2-1/2-1-1/file',
-                    __DIR__ . '/test-dirs/del/2/2-1/2-1-2/file',
-                    __DIR__ . '/test-dirs/del/2/2-1/file',
-                    __DIR__ . '/test-dirs/del/file',
-                    __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file',
-                    __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file2',
-                ],
-                'dir'  => [
-                    __DIR__ . '/test-dirs/del/2/2-1/2-1-1',
-                    __DIR__ . '/test-dirs/del/2/2-1/2-1-2',
-                    __DIR__ . '/test-dirs/del/2/2-1',
-                    __DIR__ . '/test-dirs/del/2',
-                    __DIR__ . '/test-dirs/del/1/1-1/1-1-1',
-                    __DIR__ . '/test-dirs/del/1/1-1',
-                    __DIR__ . '/test-dirs/del/1',
-                ],
-            ],
-            $list
-        );
+        $this->assertNotEmpty($list);
+        $this->checkEntries($list);
+    }
+
+    /**
+     * @param array $list
+     */
+    protected function checkEntries(array $list): void
+    {
+        $dirs = [
+            __DIR__ . '/test-dirs/del/1/1-1/1-1-1',
+            __DIR__ . '/test-dirs/del/1/1-1',
+            __DIR__ . '/test-dirs/del/1',
+            __DIR__ . '/test-dirs/del/2/2-1/2-1-1',
+            __DIR__ . '/test-dirs/del/2/2-1/2-1-2',
+            __DIR__ . '/test-dirs/del/2/2-1',
+            __DIR__ . '/test-dirs/del/2',
+        ];
+        $files = [
+            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file',
+            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file2',
+            __DIR__ . '/test-dirs/del/file',
+            __DIR__ . '/test-dirs/del/2/2-1/2-1-1/file',
+            __DIR__ . '/test-dirs/del/2/2-1/2-1-2/file',
+            __DIR__ . '/test-dirs/del/2/2-1/file',
+        ];
+
+        foreach ($dirs as $dir) {
+            $this->assertContains($dir, $list['dir']);
+        }
+
+        foreach ($files as $file) {
+            $this->assertContains($file, $list['file']);
+        }
     }
 
     public function testReadDirectoryForNotExisting(): void
