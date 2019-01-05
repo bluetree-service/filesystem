@@ -20,4 +20,8 @@ interface FsInterface
     public const COPY_PATH_CONTENT_BEFORE = 'copy_path_content_before';
     public const COPY_PATHS_BEFORE = 'copy_paths_before';
     public const COPY_CREATE_PATH_EXCEPTION = 'copy_create_path_exception';
+
+    public const CREATE_PATH_AFTER = 'create_directory_after';
+    public const CREATE_PATH_BEFORE = 'create_directory_before';
+    public const CREATE_PATH_EXCEPTION = 'create_directory_exception';
 }
