@@ -60,10 +60,11 @@ class Fs implements FsInterface
         }
 
         foreach ($paths['file'] as $path) {
-            chmod($path, 0777);
+            \chmod($path, 0777);
         }
         foreach ($paths['dir'] as $path) {
-            chmod($path, 0777);
+            dump($path);
+            \chmod($path, 0777);
         }
     }
 
@@ -173,7 +174,7 @@ class Fs implements FsInterface
         $dirToCopy = DIRECTORY_SEPARATOR . \end($pathParts);
 
         if (!Structure::exist($target)) {
-            $operationList['mkdir:' . $target] = \mkdir($target);
+            $operationList = self::tryMkdir($operationList, $target, self::COPY_CREATE_PATH_EXCEPTION);
             $dirToCopy = '';
         }
 
@@ -189,7 +190,13 @@ class Fs implements FsInterface
         foreach ($paths['file'] as $mainFile) {
             $file = \str_replace($source, '', $mainFile);
             $newTarget = $target . $dirToCopy . $file;
-            $operationList['copy:' . $mainFile . ':' . $newTarget] = \copy($mainFile, $newTarget);
+
+            try {
+                $operationList['copy:' . $mainFile . ':' . $newTarget] = \copy($mainFile, $newTarget);
+            } catch (\Throwable $exception) {
+                $operationList['copy:' . $mainFile . ':' . $newTarget] = $exception->getMessage();
+                self::triggerEvent(self::COPY_PATH_CONTENT_EXCEPTION, [&$operationList, $exception]);
+            }
         }
 
         self::triggerEvent(self::COPY_PATH_CONTENT_AFTER, [$source, $target]);
@@ -220,14 +227,27 @@ class Fs implements FsInterface
         $creationDirRevert = \array_reverse($creationDir);
 
         foreach ($creationDirRevert as $dir) {
-            try {
-                if (!Structure::exist($dir)) {
-                    $operationList['mkdir:' . $dir] = \mkdir($dir);
-                }
-            } catch (\Throwable $exception) {
-                $operationList['mkdir:' . $dir] = $exception->getMessage();
-                self::triggerEvent(self::COPY_CREATE_PATH_EXCEPTION, [&$operationList, $exception]);
+            if (!Structure::exist($dir)) {
+                $operationList = self::tryMkdir($operationList, $dir, self::COPY_CREATE_PATH_EXCEPTION);
             }
+        }
+
+        return $operationList;
+    }
+
+    /**
+     * @param array $operationList
+     * @param string $dir
+     * @param string $eventName
+     * @return array
+     */
+    protected static function tryMkdir(array $operationList, string $dir, string $eventName): array
+    {
+        try {
+            $operationList['mkdir:' . $dir] = \mkdir($dir);
+        } catch (\Throwable $exception) {
+            $operationList['mkdir:' . $dir] = $exception->getMessage();
+            self::triggerEvent($eventName, [&$operationList, $dir, $exception]);
         }
 
         return $operationList;
@@ -237,26 +257,42 @@ class Fs implements FsInterface
      * create new directory in given location
      *
      * @param string $path
-     * @return boolean
+     * @return array
      * @static
      */
-    public static function mkdir($path)
+    public static function mkdir(string $path): array
     {
-        //recursiveMkdir
-        //self::setForceMode($paths, $force);
-        self::triggerEvent('create_directory_before', [&$path]);
+        $newPath = '';
+        $operationList = [];
+        $bool = \preg_match(self::RESTRICTED_SYMBOLS, $path);
 
-        $bool = preg_match(self::RESTRICTED_SYMBOLS, $path);
-
-        if (!$bool) {
-            $bool = mkdir($path);
-//            self::triggerEvent('create_directory_after', $path);
-            return $bool;
+        if ($bool) {
+            self::triggerEvent(self::CREATE_PATH_EXCEPTION, [$path]);
+            return [];
         }
 
-        self::triggerEvent('create_directory_error', $path);
+        self::triggerEvent(self::CREATE_PATH_BEFORE, [&$path]);
+        $pathDirs = \explode(DIRECTORY_SEPARATOR, $path);
 
-        return false;
+        foreach ($pathDirs as $dir) {
+            $newPath .= $dir . DIRECTORY_SEPARATOR;
+
+            if (Structure::exist($newPath)) {
+                continue;
+            }
+
+            try {
+                $operationList[$newPath] = \mkdir($newPath);
+                self::triggerEvent(self::CREATE_PATH_AFTER, [$newPath]);
+            } catch (\Throwable $exception) {
+                self::triggerEvent(self::CREATE_PATH_EXCEPTION, [$newPath]);
+                return [
+                    $newPath => $exception->getMessage(),
+                ];
+            }
+        }
+
+        return $operationList;
     }
 
     /**
