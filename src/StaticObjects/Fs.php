@@ -63,7 +63,6 @@ class Fs implements FsInterface
             \chmod($path, 0777);
         }
         foreach ($paths['dir'] as $path) {
-            dump($path);
             \chmod($path, 0777);
         }
     }
