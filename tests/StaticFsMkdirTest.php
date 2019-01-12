@@ -59,27 +59,6 @@ class StaticFsMkdirTest extends TestCase
         $this->assertEmpty($out1);
     }
 
-    public function testCreateDirWithForce(): void
-    {
-        \shell_exec('chmod 0555 -R ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
-
-        $out1 = Fs::mkdir(__DIR__ . '/playground/new_dir/subdir1/subdir2/');
-
-        $this->assertEquals([__DIR__ . '/playground/new_dir/' => 'mkdir(): Permission denied'], $out1);
-
-        $out1 = Fs::mkdir(__DIR__ . '/playground/new_dir/subdir1/subdir2/', true);
-
-        $this->assertNotEmpty($out1);
-        $this->assertEquals(
-            [
-                __DIR__ . '/playground/new_dir/' => true,
-                __DIR__ . '/playground/new_dir/subdir1/' => true,
-                __DIR__ . '/playground/new_dir/subdir1/subdir2/' => true,
-            ],
-            $out1
-        );
-    }
-
     public function tearDown(): void
     {
         $this->setUp();
