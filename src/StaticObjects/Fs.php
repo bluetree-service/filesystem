@@ -304,29 +304,38 @@ class Fs implements FsInterface
      * @example mkfile('directory/inn', 'file.txt')
      * @example mkfile('directory/inn', 'file.txt', 'Lorem ipsum')
      */
-    public static function mkfile($path, $fileName, $data = null)
+    public static function mkfile(string $path, string $fileName, $data = null): bool
     {
-        //self::setForceMode($paths, $force);
         self::triggerEvent('create_file_before', [&$path, &$fileName, &$data]);
 
         if (!Structure::exist($path)) {
-            self::mkdir($path);
-        }
-
-        $bool = preg_match(self::RESTRICTED_SYMBOLS, $fileName);
-
-        if (!$bool) {
-            $fileResource = @fopen("$path/$fileName", 'w');
-            fclose($fileResource);
-
-            if ($data) {
-                $bool = file_put_contents("$path/$fileName", $data);
-//                self::triggerEvent('create_file_after', [$path, $fileName]);
-                return $bool;
+            $list = self::mkdir($path);
+            if (empty($list)) {
+                return false;
             }
         }
 
-        self::triggerEvent('create_file_error', [$path, $fileName]);
+        $bool = \preg_match(self::RESTRICTED_SYMBOLS, $fileName);
+
+        if ($bool) {
+            self::triggerEvent(self::CREATE_PATH_EXCEPTION, [$fileName]);
+            return false;
+        }
+
+        try {
+            $fileResource = \fopen("$path/$fileName", 'wb');
+            fclose($fileResource);
+
+            if ($data) {
+                $bool = \file_put_contents($path . DIRECTORY_SEPARATOR . $fileName, $data);
+                self::triggerEvent('create_file_after', [$path, $fileName]);
+                return $bool;
+            }
+        } catch (\Throwable $exception) {
+            self::triggerEvent('create_file_error', [$path, $fileName]);
+        }
+
+                self::triggerEvent('create_file_error', [$path, $fileName]);
 
         return false;
     }
