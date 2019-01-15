@@ -6,6 +6,7 @@ interface FsInterface
 {
     /**
      * restricted characters for file and directory names
+     *
      * @var string
      */
     public const RESTRICTED_SYMBOLS = '#[:?*<>"|\\\]#';
@@ -24,4 +25,8 @@ interface FsInterface
     public const CREATE_PATH_AFTER = 'create_directory_after';
     public const CREATE_PATH_BEFORE = 'create_directory_before';
     public const CREATE_PATH_EXCEPTION = 'create_directory_exception';
+
+    public const CREATE_FILE_AFTER = 'create_file_after';
+    public const CREATE_FILE_BEFORE = 'create_file_before';
+    public const CREATE_FILE_EXCEPTION = 'create_file_exception';
 }
