@@ -300,44 +300,41 @@ class Fs implements FsInterface
      * @param string $path
      * @param string $fileName
      * @param mixed $data
-     * @return boolean information that operation was successfully, or NULL if path incorrect
+     * @return boolean information that operation was successfully, or [] if path incorrect
      * @example mkfile('directory/inn', 'file.txt')
      * @example mkfile('directory/inn', 'file.txt', 'Lorem ipsum')
      */
     public static function mkfile(string $path, string $fileName, $data = null): bool
     {
-        self::triggerEvent('create_file_before', [&$path, &$fileName, &$data]);
+        $status = false;
+
+        self::triggerEvent(self::CREATE_FILE_BEFORE, [&$path, &$fileName, &$data]);
 
         if (!Structure::exist($path)) {
             $list = self::mkdir($path);
-            if (empty($list)) {
+            if ($list === []) {
                 return false;
             }
         }
 
-        $bool = \preg_match(self::RESTRICTED_SYMBOLS, $fileName);
-
-        if ($bool) {
-            self::triggerEvent(self::CREATE_PATH_EXCEPTION, [$fileName]);
+        if (\preg_match(self::RESTRICTED_SYMBOLS, $fileName)) {
+            self::triggerEvent(self::CREATE_FILE_EXCEPTION, [$fileName]);
             return false;
         }
 
         try {
-            $fileResource = \fopen("$path/$fileName", 'wb');
+            $fileResource = \fopen($path . DIRECTORY_SEPARATOR . $fileName, 'wb');
             fclose($fileResource);
 
             if ($data) {
-                $bool = \file_put_contents($path . DIRECTORY_SEPARATOR . $fileName, $data);
-                self::triggerEvent('create_file_after', [$path, $fileName]);
-                return $bool;
+                $status = \file_put_contents($path . DIRECTORY_SEPARATOR . $fileName, $data);
+                self::triggerEvent(self::CREATE_FILE_AFTER, [$path, $fileName]);
             }
         } catch (\Throwable $exception) {
-            self::triggerEvent('create_file_error', [$path, $fileName]);
+            self::triggerEvent(self::CREATE_FILE_EXCEPTION, [$path, $fileName, $exception]);
         }
 
-                self::triggerEvent('create_file_error', [$path, $fileName]);
-
-        return false;
+        return $status;
     }
 
     /**
