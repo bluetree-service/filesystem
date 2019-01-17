@@ -324,17 +324,18 @@ class Fs implements FsInterface
 
         try {
             $fileResource = \fopen($path . DIRECTORY_SEPARATOR . $fileName, 'wb');
-            fclose($fileResource);
 
             if ($data) {
-                $status = \file_put_contents($path . DIRECTORY_SEPARATOR . $fileName, $data);
+                $status = \fwrite($fileResource, $data);
                 self::triggerEvent(self::CREATE_FILE_AFTER, [$path, $fileName]);
             }
+
+            fclose($fileResource);
         } catch (\Throwable $exception) {
             self::triggerEvent(self::CREATE_FILE_EXCEPTION, [$path, $fileName, $exception]);
         }
 
-        return $status;
+        return (bool)$status;
     }
 
     /**
