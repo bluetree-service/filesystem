@@ -331,6 +331,7 @@ class Fs implements FsInterface
             }
 
             fclose($fileResource);
+            $status = true;
         } catch (\Throwable $exception) {
             self::triggerEvent(self::CREATE_FILE_EXCEPTION, [$path, $fileName, $exception]);
         }
