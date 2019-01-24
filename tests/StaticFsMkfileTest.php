@@ -3,7 +3,11 @@
 namespace BlueFilesystemTest;
 
 use PHPUnit\Framework\TestCase;
-use BlueFilesystem\StaticObjects\Fs;
+use BlueFilesystem\StaticObjects\{
+    Fs,
+    FsInterface
+};
+use BlueEvent\Event\Base\EventDispatcher;
 
 class StaticFsMkfileTest extends TestCase
 {
@@ -59,7 +63,46 @@ class StaticFsMkfileTest extends TestCase
 
     public function testMkfileWithEvents(): void
     {
-        
+        $exceptionsExecutions = 0;
+        $afterExecutions = 0;
+        $beforeExecutions = 0;
+
+        $eventDispatcher = new EventDispatcher;
+        $eventDispatcher->setEventConfiguration([
+            FsInterface::CREATE_FILE_EXCEPTION => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$exceptionsExecutions) {
+                        $exceptionsExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::CREATE_FILE_BEFORE => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$beforeExecutions) {
+                        $beforeExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::CREATE_FILE_AFTER => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$afterExecutions) {
+                        $afterExecutions++;
+                    },
+                ],
+            ],
+        ]);
+
+        Fs::configureEventHandler($eventDispatcher);
+
+        $this->testCreateFile();
+        $this->testCreateFileWithError();
+
+        $this->assertEquals(1, $exceptionsExecutions);
+        $this->assertEquals(1, $afterExecutions);
+        $this->assertEquals(2, $beforeExecutions);
     }
 
     public function tearDown(): void
