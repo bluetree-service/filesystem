@@ -327,9 +327,9 @@ class Fs implements FsInterface
 
             if ($data) {
                 $status = \fwrite($fileResource, $data);
-                self::triggerEvent(self::CREATE_FILE_AFTER, [$path, $fileName]);
             }
 
+            self::triggerEvent(self::CREATE_FILE_AFTER, [$path, $fileName]);
             fclose($fileResource);
             $status = true;
         } catch (\Throwable $exception) {
