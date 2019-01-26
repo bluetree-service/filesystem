@@ -3,7 +3,11 @@
 namespace BlueFilesystemTest;
 
 use PHPUnit\Framework\TestCase;
-use BlueFilesystem\StaticObjects\Fs;
+use BlueFilesystem\StaticObjects\{
+    Fs,
+    FsInterface
+};
+use BlueEvent\Event\Base\EventDispatcher;
 
 class StaticFsCopyTest extends TestCase
 {
@@ -13,7 +17,7 @@ class StaticFsCopyTest extends TestCase
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'copy > /dev/null 2>&1');
     }
 
-    //@todo test copy events
+    //@todo copy file exceptions
 
     public function testCopyDirSuccess(): void
     {
@@ -143,6 +147,23 @@ class StaticFsCopyTest extends TestCase
         );
     }
 
+    public function testSingleFileWithError(): void
+    {
+        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy');
+        \shell_exec('chmod 0555 -R ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
+
+        $out = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'copy');
+
+        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy');
+        $this->assertEquals(
+            [
+                'copy:' . __DIR__ . '/test-dirs/del/file:' . StaticFsDelTest::TEST_DIR . 'copy'
+                    => 'copy(' . StaticFsDelTest::TEST_DIR . 'copy' . '): failed to open stream: Permission denied'
+            ],
+            $out
+        );
+    }
+
     public function testSingleFileExists(): void
     {
         $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy');
@@ -162,6 +183,75 @@ class StaticFsCopyTest extends TestCase
 
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy');
         $this->assertEquals('', \file_get_contents(StaticFsDelTest::TEST_DIR . 'copy'));
+    }
+
+    public function testCopyWhenSourceDontExists(): void
+    {
+        $out = Fs::copy('din-not-exists', StaticFsDelTest::TEST_DIR . 'copy');
+        $this->assertEmpty($out);
+    }
+
+    public function testCopyWithEvents(): void
+    {
+        $exceptionsExecutions = 0;
+        $afterExecutions = 0;
+        $beforeExecutions = 0;
+        $exceptionsContentExecutions = 0;
+        $beforePathsExecutions = 0;
+
+        $eventDispatcher = new EventDispatcher;
+        $eventDispatcher->setEventConfiguration([
+            FsInterface::COPY_CREATE_PATH_EXCEPTION => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$exceptionsExecutions) {
+                        $exceptionsExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::COPY_PATH_CONTENT_EXCEPTION => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$exceptionsContentExecutions) {
+                        $exceptionsContentExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::COPY_PATH_CONTENT_BEFORE => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$beforeExecutions) {
+                        $beforeExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::COPY_PATH_CONTENT_AFTER => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$afterExecutions) {
+                        $afterExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::COPY_PATHS_BEFORE => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$beforePathsExecutions) {
+                        $beforePathsExecutions++;
+                    },
+                ],
+            ],
+        ]);
+
+        Fs::configureEventHandler($eventDispatcher);
+
+        $this->testCopyWithError();
+
+        $this->assertEquals(9, $exceptionsExecutions);
+        $this->assertEquals(1, $afterExecutions);
+        $this->assertEquals(1, $beforeExecutions);
+        $this->assertEquals(6, $exceptionsContentExecutions);
+        $this->assertEquals(1, $beforePathsExecutions);
     }
 
     public function tearDown(): void
