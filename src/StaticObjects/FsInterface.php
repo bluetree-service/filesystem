@@ -29,4 +29,8 @@ interface FsInterface
     public const CREATE_FILE_AFTER = 'create_file_after';
     public const CREATE_FILE_BEFORE = 'create_file_before';
     public const CREATE_FILE_EXCEPTION = 'create_file_exception';
+
+    public const RENAME_FILE_OR_DIR_EXCEPTION = 'rename_file_or_directory_exception';
+    public const RENAME_FILE_OR_DIR_BEFORE = 'rename_file_or_directory_before';
+    public const RENAME_FILE_OR_DIR_AFTER = 'rename_file_or_directory_after';
 }
