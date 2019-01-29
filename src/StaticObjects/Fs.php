@@ -300,7 +300,7 @@ class Fs implements FsInterface
      * @param string $path
      * @param string $fileName
      * @param mixed $data
-     * @return boolean information that operation was successfully, or [] if path incorrect
+     * @return boolean information that operation was successfully
      * @example mkfile('directory/inn', 'file.txt')
      * @example mkfile('directory/inn', 'file.txt', 'Lorem ipsum')
      */
@@ -313,13 +313,13 @@ class Fs implements FsInterface
         if (!Structure::exist($path)) {
             $list = self::mkdir($path);
             if ($list === []) {
-                return false;
+                return $status;
             }
         }
 
         if (\preg_match(self::RESTRICTED_SYMBOLS, $fileName)) {
             self::triggerEvent(self::CREATE_FILE_EXCEPTION, [$fileName]);
-            return false;
+            return $status;
         }
 
         try {
@@ -345,34 +345,39 @@ class Fs implements FsInterface
      *
      * @param string $source original path or name
      * @param string $target new path or name
-     * @return boolean information that operation was successfully, or NULL if path incorrect
+     * @param bool $force
+     * @return boolean information that operation was successfully
      */
-    public static function rename($source, $target)
+    public static function rename(string $source, string $target, bool $force): bool
     {
-        //elf::setForceMode($paths, $force);
-        self::triggerEvent('rename_file_or_directory_before', [&$source, &$target]);
+        $status = false;
+
+        self::setForceMode([$source], $force);
+        self::triggerEvent(self::RENAME_FILE_OR_DIR_BEFORE, [&$source, &$target]);
 
         if (!Structure::exist($source)) {
-//            self::triggerEvent('rename_file_or_directory_error', [$source, 'source']);
-            return null;
+            self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$source, 'source']);
+            return $status;
         }
 
         if (Structure::exist($target)) {
-//            self::triggerEvent('rename_file_or_directory_error', [$target, 'target']);
-            return false;
+            self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$target, 'target']);
+            return $status;
         }
 
-        $bool = preg_match(self::RESTRICTED_SYMBOLS, $target);
-
-        if (!$bool) {
-            $bool = rename($source, $target);
-//            self::triggerEvent('rename_file_or_directory_after', [$source, $target]);
-            return $bool;
+        if (\preg_match(self::RESTRICTED_SYMBOLS, $target)) {
+            self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$target]);
+            return $status;
         }
 
-        self::triggerEvent('rename_file_or_directory_error', [$source, $target]);
+        try {
+            $status = \rename($source, $target);
+            self::triggerEvent(self::RENAME_FILE_OR_DIR_AFTER, [$source, $target]);
+        } catch (\Throwable $exception) {
+            self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$source, $target, $exception]);
+        }
 
-        return false;
+        return $status;
     }
 
     /**
