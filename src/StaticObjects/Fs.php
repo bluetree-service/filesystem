@@ -423,6 +423,28 @@ class Fs implements FsInterface
     }
 
     /**
+     * Check that complex output array (like from Fs::copy) is finished with full success or with some fail
+     * If $output is empty, also return false
+     *
+     * @param array $output
+     * @return bool
+     */
+    public static function validateComplexOutput(array $output): bool
+    {
+        if (empty($output)) {
+            return false;
+        }
+
+        $status = true;
+
+        foreach ($output as $execStatus) {
+            $status &= $execStatus === true;
+        }
+
+        return $status;
+    }
+
+    /**
      * @param string $name
      * @param array $data
      */
