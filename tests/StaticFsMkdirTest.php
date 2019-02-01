@@ -24,6 +24,7 @@ class StaticFsMkdirTest extends TestCase
 
         $this->assertNotEmpty($out1);
 
+        $this->assertTrue(Fs::validateComplexOutput($out1));
         $this->assertEquals(
             [
                 __DIR__ . '/playground/new_dir/' => true,
@@ -42,6 +43,9 @@ class StaticFsMkdirTest extends TestCase
         $this->assertNotEmpty($out1);
         $this->assertNotEmpty($out2);
 
+        $this->assertTrue(Fs::validateComplexOutput($out1));
+        $this->assertTrue(Fs::validateComplexOutput($out2));
+
         $this->assertEquals([__DIR__ . '/playground/new_dir/' => true], $out1);
         $this->assertEquals([__DIR__ . '/playground/new_dir2/' => true], $out2);
     }
@@ -53,6 +57,7 @@ class StaticFsMkdirTest extends TestCase
         $out1 = Fs::mkdir(__DIR__ . '/playground/new_dir/subdir1/subdir2/');
 
         $this->assertNotEmpty($out1);
+        $this->assertFalse(Fs::validateComplexOutput($out1));
         $this->assertEquals([__DIR__ . '/playground/new_dir/' => 'mkdir(): Permission denied'], $out1);
     }
 
@@ -61,6 +66,7 @@ class StaticFsMkdirTest extends TestCase
         $out1 = Fs::mkdir(__DIR__ . '/playground/new_dir:?');
 
         $this->assertEmpty($out1);
+        $this->assertFalse(Fs::validateComplexOutput($out1));
     }
 
     public function testMkdirWithEvents(): void

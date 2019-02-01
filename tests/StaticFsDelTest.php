@@ -23,6 +23,7 @@ class StaticFsDelTest extends TestCase
     {
         $result = Fs::delete(__DIR__ . '/playground-fake');
         $this->assertEmpty($result);
+        $this->assertFalse(Fs::validateComplexOutput($result));
     }
 
     public function testDeleteSuccess(): void
@@ -55,6 +56,7 @@ class StaticFsDelTest extends TestCase
             $result
         );
 
+        $this->assertTrue(Fs::validateComplexOutput($result));
         $this->assertFileNotExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
         $this->assertFileNotExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
         $this->assertFileNotExists(self::TEST_DIR . 'del/1/1-1/1-1-1');
@@ -93,6 +95,7 @@ class StaticFsDelTest extends TestCase
             $result
         );
 
+        $this->assertFalse(Fs::validateComplexOutput($result));
         $this->assertFileExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1');
@@ -133,6 +136,7 @@ class StaticFsDelTest extends TestCase
             $result
         );
 
+        $this->assertFalse(Fs::validateComplexOutput($result));
         $this->assertFileExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1');
@@ -157,6 +161,7 @@ class StaticFsDelTest extends TestCase
             $result
         );
 
+        $this->assertTrue(Fs::validateComplexOutput($result));
         $this->assertFileNotExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
         $this->assertFileNotExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
         $this->assertFileNotExists(self::TEST_DIR . 'del/1/1-1/1-1-1');

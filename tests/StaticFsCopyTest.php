@@ -34,6 +34,7 @@ class StaticFsCopyTest extends TestCase
         $dir1 = StaticFsDelTest::TEST_DIR . 'copy';
         $dir2 = __DIR__ . '/test-dirs/del';
 
+        $this->assertTrue(Fs::validateComplexOutput($out));
         $this->assertEquals(
             [
                 'mkdir:' . $dir1  => true,
@@ -72,6 +73,7 @@ class StaticFsCopyTest extends TestCase
         $dir1 = StaticFsDelTest::TEST_DIR . 'copy';
         $dir2 = __DIR__ . '/test-dirs/del';
 
+        $this->assertFalse(Fs::validateComplexOutput($out));
         $this->assertEquals(
             [
                 'mkdir:' . $dir1  => 'mkdir(): Permission denied',
@@ -111,6 +113,7 @@ class StaticFsCopyTest extends TestCase
         $dir1 = StaticFsDelTest::TEST_DIR . 'copy/del';
         $dir2 = __DIR__ . '/test-dirs/del';
 
+        $this->assertTrue(Fs::validateComplexOutput($out));
         $this->assertEquals(
             [
                 'mkdir:' . $dir1  => true,
@@ -138,6 +141,7 @@ class StaticFsCopyTest extends TestCase
 
         $out = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'copy');
 
+        $this->assertTrue(Fs::validateComplexOutput($out));
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy');
         $this->assertEquals(
             [
@@ -154,6 +158,7 @@ class StaticFsCopyTest extends TestCase
 
         $out = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'copy');
 
+        $this->assertFalse(Fs::validateComplexOutput($out));
         $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy');
         $this->assertEquals(
             [
@@ -173,6 +178,7 @@ class StaticFsCopyTest extends TestCase
 
         $out = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'copy');
 
+        $this->assertTrue(Fs::validateComplexOutput($out));
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy');
         $this->assertEquals(
             [
@@ -189,6 +195,7 @@ class StaticFsCopyTest extends TestCase
     {
         $out = Fs::copy('din-not-exists', StaticFsDelTest::TEST_DIR . 'copy');
         $this->assertEmpty($out);
+        $this->assertFalse(Fs::validateComplexOutput($out));
     }
 
     public function testCopyWithEvents(): void
