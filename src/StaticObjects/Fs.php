@@ -348,33 +348,35 @@ class Fs implements FsInterface
      * @param bool $force
      * @return boolean information that operation was successfully
      */
-    public static function rename(string $source, string $target, bool $force): bool
+    public static function rename(string $source, string $target, bool $force = false): bool
     {
-        $status = false;
+        $status = true;
 
         self::setForceMode([$source], $force);
         self::triggerEvent(self::RENAME_FILE_OR_DIR_BEFORE, [&$source, &$target]);
 
         if (!Structure::exist($source)) {
             self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$source, 'source']);
-            return $status;
+            $status = false;
         }
 
         if (Structure::exist($target)) {
             self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$target, 'target']);
-            return $status;
+            $status = false;
         }
 
         if (\preg_match(self::RESTRICTED_SYMBOLS, $target)) {
             self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$target]);
-            return $status;
+            $status = false;
         }
 
-        try {
-            $status = \rename($source, $target);
-            self::triggerEvent(self::RENAME_FILE_OR_DIR_AFTER, [$source, $target]);
-        } catch (\Throwable $exception) {
-            self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$source, $target, $exception]);
+        if ($status) {
+            try {
+                $status = \rename($source, $target);
+                self::triggerEvent(self::RENAME_FILE_OR_DIR_AFTER, [$source, $target]);
+            } catch (\Throwable $exception) {
+                self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$source, $target, $exception]);
+            }
         }
 
         return $status;
