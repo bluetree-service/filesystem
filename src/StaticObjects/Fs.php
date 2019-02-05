@@ -375,6 +375,7 @@ class Fs implements FsInterface
                 $status = \rename($source, $target);
                 self::triggerEvent(self::RENAME_FILE_OR_DIR_AFTER, [$source, $target]);
             } catch (\Throwable $exception) {
+                $status = false;
                 self::triggerEvent(self::RENAME_FILE_OR_DIR_EXCEPTION, [$source, $target, $exception]);
             }
         }
