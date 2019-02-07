@@ -63,13 +63,53 @@ class StaticFsRenameTest extends TestCase
         $out = Fs::rename(StaticFsDelTest::TEST_DIR . 'test/file', StaticFsDelTest::TEST_DIR . 'test/file2');
 
         $this->assertFalse($out);
-        $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'file');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'file2');
+        $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'test/file');
+        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test/file2');
     }
 
-    public function testRenameWithEvents()
+    public function testRenameWithEvents(): void
     {
-        
+        $exceptionsExecutions = 0;
+        $afterExecutions = 0;
+        $beforeExecutions = 0;
+
+        $eventDispatcher = new EventDispatcher;
+        $eventDispatcher->setEventConfiguration([
+            FsInterface::RENAME_FILE_OR_DIR_EXCEPTION => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$exceptionsExecutions) {
+                        $exceptionsExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::RENAME_FILE_OR_DIR_AFTER => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$afterExecutions) {
+                        $afterExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::RENAME_FILE_OR_DIR_BEFORE => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$beforeExecutions) {
+                        $beforeExecutions++;
+                    },
+                ],
+            ],
+        ]);
+
+        Fs::configureEventHandler($eventDispatcher);
+
+        $this->testRenameFile();
+        $this->tearDown();
+        $this->testRenameWithException();
+
+        $this->assertEquals(1, $exceptionsExecutions);
+        $this->assertEquals(1, $afterExecutions);
+        $this->assertEquals(2, $beforeExecutions);
     }
 
     public function tearDown(): void
