@@ -33,4 +33,8 @@ interface FsInterface
     public const RENAME_FILE_OR_DIR_EXCEPTION = 'rename_file_or_directory_exception';
     public const RENAME_FILE_OR_DIR_BEFORE = 'rename_file_or_directory_before';
     public const RENAME_FILE_OR_DIR_AFTER = 'rename_file_or_directory_after';
+
+    public const MOVE_FILE_OR_DIR_EXCEPTION = 'move_file_or_directory_error';
+    public const MOVE_FILE_OR_DIR_BEFORE = 'move_file_or_directory_before';
+    public const MOVE_FILE_OR_DIR_AFTER = 'move_file_or_directory_after';
 }
