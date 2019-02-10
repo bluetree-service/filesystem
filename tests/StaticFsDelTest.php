@@ -13,7 +13,7 @@ class StaticFsDelTest extends TestCase
 {
     public const TEST_DIR = __DIR__ . '/playground/';
 
-    public function setUp()
+    public function setUp(): void
     {
         shell_exec('chmod 0777 -R ' . self::TEST_DIR . ' > /dev/null 2>&1');
         shell_exec('rm -r ' . self::TEST_DIR . 'del > /dev/null 2>&1');
