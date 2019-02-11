@@ -100,12 +100,12 @@ class Fs implements FsInterface
     {
         try {
             if ($isDir) {
-                $operationList[$path] = rmdir($path);
+                $operationList['delete:' . $path] = rmdir($path);
             } else {
-                $operationList[$path] = unlink($path);
+                $operationList['delete:' . $path] = unlink($path);
             }
         } catch (\Throwable $exception) {
-            $operationList[$path] = $exception->getMessage();
+            $operationList['delete:' . $path] = $exception->getMessage();
             self::triggerEvent(self::DELETE_PATH_CONTENT_EXCEPTION, [&$operationList, $path, $exception]);
         }
 
@@ -388,23 +388,30 @@ class Fs implements FsInterface
      *
      * @param string $source
      * @param string $target
-     * @return bool
+     * @param bool $force
+     * @return array
      */
-    public static function move($source, $target)
+    public static function move(string $source, string $target, bool $force = false): array
     {
-        //elf::setForceMode($paths, $force);
         self::triggerEvent('move_file_or_directory_before', [&$source, &$target]);
-        $bool = self::copy($source, $target);
 
-        if (!$bool) {
-//            self::triggerEvent('move_file_or_directory_error', [$source, $target]);
-            return false;
+        $status = self::copy($source, $target, $force);
+
+        if (!self::validateComplexOutput($status)) {
+            self::triggerEvent('move_file_or_directory_error', [$source, $target, $status]);
+            return [];
         }
 
-        $bool = self::delete($source);
-        self::triggerEvent('move_file_or_directory_after', [$source, $target, $bool]);
+        $status = \array_merge(self::delete($source, $force), $status);
 
-        return $bool;
+        if (!self::validateComplexOutput($status)) {
+            self::triggerEvent('move_file_or_directory_error', [$source, $target, $status]);
+            return [];
+        }
+
+        self::triggerEvent('move_file_or_directory_after', [$source, $target, $status]);
+
+        return $status;
     }
 
     /**
