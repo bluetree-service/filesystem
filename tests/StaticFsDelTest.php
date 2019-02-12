@@ -12,6 +12,7 @@ use BlueEvent\Event\Base\EventDispatcher;
 class StaticFsDelTest extends TestCase
 {
     public const TEST_DIR = __DIR__ . '/playground/';
+    public const TEST_DIR_KEY = 'delete:' . self::TEST_DIR;
 
     public function setUp(): void
     {
@@ -38,20 +39,20 @@ class StaticFsDelTest extends TestCase
 
         $this->assertEquals(
             [
-                self::TEST_DIR . 'del/2/2-1/2-1-1/file' => true,
-                self::TEST_DIR . 'del/2/2-1/2-1-2/file' => true,
-                self::TEST_DIR . 'del/2/2-1/file' => true,
-                self::TEST_DIR . 'del/file' => true,
-                self::TEST_DIR . 'del/1/1-1/1-1-1/file' => true,
-                self::TEST_DIR . 'del/1/1-1/1-1-1/file2' => true,
-                self::TEST_DIR . 'del/2/2-1/2-1-1' => true,
-                self::TEST_DIR . 'del/2/2-1/2-1-2' => true,
-                self::TEST_DIR . 'del/2/2-1' => true,
-                self::TEST_DIR . 'del/2' => true,
-                self::TEST_DIR . 'del/1/1-1/1-1-1' => true,
-                self::TEST_DIR . 'del/1/1-1' => true,
-                self::TEST_DIR . 'del/1' => true,
-                self::TEST_DIR . 'del' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-1/file' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-2/file' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1/file' => true,
+                self::TEST_DIR_KEY . 'del/file' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1/file' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1/file2' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-1' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-2' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1' => true,
+                self::TEST_DIR_KEY . 'del/2' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1' => true,
+                self::TEST_DIR_KEY . 'del/1' => true,
+                self::TEST_DIR_KEY . 'del' => true,
             ],
             $result
         );
@@ -77,20 +78,20 @@ class StaticFsDelTest extends TestCase
 
         $this->assertEquals(
             [
-                self::TEST_DIR . 'del/2/2-1/2-1-1/file' => 'unlink(' . self::TEST_DIR . 'del/2/2-1/2-1-1/file): Permission denied',
-                self::TEST_DIR . 'del/2/2-1/2-1-2/file' => true,
-                self::TEST_DIR . 'del/2/2-1/file' => true,
-                self::TEST_DIR . 'del/file' => true,
-                self::TEST_DIR . 'del/1/1-1/1-1-1/file' => 'unlink(' . self::TEST_DIR . 'del/1/1-1/1-1-1/file): Permission denied',
-                self::TEST_DIR . 'del/1/1-1/1-1-1/file2' => 'unlink(' . self::TEST_DIR . 'del/1/1-1/1-1-1/file2): Permission denied',
-                self::TEST_DIR . 'del/2/2-1/2-1-1' => 'rmdir(' . self::TEST_DIR . 'del/2/2-1/2-1-1): Directory not empty',
-                self::TEST_DIR . 'del/2/2-1/2-1-2' => true,
-                self::TEST_DIR . 'del/2/2-1' => 'rmdir(' . self::TEST_DIR . 'del/2/2-1): Directory not empty',
-                self::TEST_DIR . 'del/2' => 'rmdir(' . self::TEST_DIR . 'del/2): Directory not empty',
-                self::TEST_DIR . 'del/1/1-1/1-1-1' => 'rmdir(' .self::TEST_DIR . 'del/1/1-1/1-1-1): Directory not empty',
-                self::TEST_DIR . 'del/1/1-1' => 'rmdir(' . self::TEST_DIR . 'del/1/1-1): Directory not empty',
-                self::TEST_DIR . 'del/1' => 'rmdir(' . self::TEST_DIR . 'del/1): Directory not empty',
-                self::TEST_DIR . 'del' => 'rmdir(' . self::TEST_DIR . 'del): Directory not empty',
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-1/file' => 'unlink(' . self::TEST_DIR . 'del/2/2-1/2-1-1/file): Permission denied',
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-2/file' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1/file' => true,
+                self::TEST_DIR_KEY . 'del/file' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1/file' => 'unlink(' . self::TEST_DIR . 'del/1/1-1/1-1-1/file): Permission denied',
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1/file2' => 'unlink(' . self::TEST_DIR . 'del/1/1-1/1-1-1/file2): Permission denied',
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-1' => 'rmdir(' . self::TEST_DIR . 'del/2/2-1/2-1-1): Directory not empty',
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-2' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1' => 'rmdir(' . self::TEST_DIR . 'del/2/2-1): Directory not empty',
+                self::TEST_DIR_KEY . 'del/2' => 'rmdir(' . self::TEST_DIR . 'del/2): Directory not empty',
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1' => 'rmdir(' .self::TEST_DIR . 'del/1/1-1/1-1-1): Directory not empty',
+                self::TEST_DIR_KEY . 'del/1/1-1' => 'rmdir(' . self::TEST_DIR . 'del/1/1-1): Directory not empty',
+                self::TEST_DIR_KEY . 'del/1' => 'rmdir(' . self::TEST_DIR . 'del/1): Directory not empty',
+                self::TEST_DIR_KEY . 'del' => 'rmdir(' . self::TEST_DIR . 'del): Directory not empty',
             ],
             $result
         );
@@ -118,20 +119,20 @@ class StaticFsDelTest extends TestCase
 
         $this->assertEquals(
             [
-                self::TEST_DIR . 'del/2/2-1/2-1-1/file' => 'unlink(' . self::TEST_DIR . 'del/2/2-1/2-1-1/file): Permission denied',
-                self::TEST_DIR . 'del/2/2-1/2-1-2/file' => true,
-                self::TEST_DIR . 'del/2/2-1/file' => true,
-                self::TEST_DIR . 'del/file' => true,
-                self::TEST_DIR . 'del/1/1-1/1-1-1/file' => 'unlink(' . self::TEST_DIR . 'del/1/1-1/1-1-1/file): Permission denied',
-                self::TEST_DIR . 'del/1/1-1/1-1-1/file2' => 'unlink(' . self::TEST_DIR . 'del/1/1-1/1-1-1/file2): Permission denied',
-                self::TEST_DIR . 'del/2/2-1/2-1-1' => 'rmdir(' . self::TEST_DIR . 'del/2/2-1/2-1-1): Directory not empty',
-                self::TEST_DIR . 'del/2/2-1/2-1-2' => true,
-                self::TEST_DIR . 'del/2/2-1' => 'rmdir(' . self::TEST_DIR . 'del/2/2-1): Directory not empty',
-                self::TEST_DIR . 'del/2' => 'rmdir(' . self::TEST_DIR . 'del/2): Directory not empty',
-                self::TEST_DIR . 'del/1/1-1/1-1-1' => 'rmdir(' .self::TEST_DIR . 'del/1/1-1/1-1-1): Directory not empty',
-                self::TEST_DIR . 'del/1/1-1' => 'rmdir(' . self::TEST_DIR . 'del/1/1-1): Directory not empty',
-                self::TEST_DIR . 'del/1' => 'rmdir(' . self::TEST_DIR . 'del/1): Directory not empty',
-                self::TEST_DIR . 'del' => 'rmdir(' . self::TEST_DIR . 'del): Directory not empty',
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-1/file' => 'unlink(' . self::TEST_DIR . 'del/2/2-1/2-1-1/file): Permission denied',
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-2/file' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1/file' => true,
+                self::TEST_DIR_KEY . 'del/file' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1/file' => 'unlink(' . self::TEST_DIR . 'del/1/1-1/1-1-1/file): Permission denied',
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1/file2' => 'unlink(' . self::TEST_DIR . 'del/1/1-1/1-1-1/file2): Permission denied',
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-1' => 'rmdir(' . self::TEST_DIR . 'del/2/2-1/2-1-1): Directory not empty',
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-2' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1' => 'rmdir(' . self::TEST_DIR . 'del/2/2-1): Directory not empty',
+                self::TEST_DIR_KEY . 'del/2' => 'rmdir(' . self::TEST_DIR . 'del/2): Directory not empty',
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1' => 'rmdir(' .self::TEST_DIR . 'del/1/1-1/1-1-1): Directory not empty',
+                self::TEST_DIR_KEY . 'del/1/1-1' => 'rmdir(' . self::TEST_DIR . 'del/1/1-1): Directory not empty',
+                self::TEST_DIR_KEY . 'del/1' => 'rmdir(' . self::TEST_DIR . 'del/1): Directory not empty',
+                self::TEST_DIR_KEY . 'del' => 'rmdir(' . self::TEST_DIR . 'del): Directory not empty',
             ],
             $result
         );
@@ -147,16 +148,16 @@ class StaticFsDelTest extends TestCase
 
         $this->assertEquals(
             [
-                self::TEST_DIR . 'del/1/1-1/1-1-1/file2' => true,
-                self::TEST_DIR . 'del/1/1-1/1-1-1/file' => true,
-                self::TEST_DIR . 'del/2/2-1/2-1-1/file' => true,
-                self::TEST_DIR . 'del/1/1-1/1-1-1' => true,
-                self::TEST_DIR . 'del/1/1-1' => true,
-                self::TEST_DIR . 'del/1' => true,
-                self::TEST_DIR . 'del/2/2-1/2-1-1' => true,
-                self::TEST_DIR . 'del/2/2-1' => true,
-                self::TEST_DIR . 'del/2' => true,
-                self::TEST_DIR . 'del' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1/file2' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1/file' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-1/file' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1/1-1-1' => true,
+                self::TEST_DIR_KEY . 'del/1/1-1' => true,
+                self::TEST_DIR_KEY . 'del/1' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1/2-1-1' => true,
+                self::TEST_DIR_KEY . 'del/2/2-1' => true,
+                self::TEST_DIR_KEY . 'del/2' => true,
+                self::TEST_DIR_KEY . 'del' => true,
             ],
             $result
         );
