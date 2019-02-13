@@ -393,23 +393,23 @@ class Fs implements FsInterface
      */
     public static function move(string $source, string $target, bool $force = false): array
     {
-        self::triggerEvent('move_file_or_directory_before', [&$source, &$target]);
+        self::triggerEvent(self::MOVE_FILE_OR_DIR_BEFORE, [&$source, &$target]);
 
         $status = self::copy($source, $target, $force);
 
         if (!self::validateComplexOutput($status)) {
-            self::triggerEvent('move_file_or_directory_error', [$source, $target, $status]);
+            self::triggerEvent(self::MOVE_FILE_OR_DIR_EXCEPTION, [$source, $target, $status]);
             return [];
         }
 
         $status = \array_merge(self::delete($source, $force), $status);
 
         if (!self::validateComplexOutput($status)) {
-            self::triggerEvent('move_file_or_directory_error', [$source, $target, $status]);
+            self::triggerEvent(self::MOVE_FILE_OR_DIR_EXCEPTION, [$source, $target, $status]);
             return [];
         }
 
-        self::triggerEvent('move_file_or_directory_after', [$source, $target, $status]);
+        self::triggerEvent(self::MOVE_FILE_OR_DIR_AFTER, [$source, $target, $status]);
 
         return $status;
     }
