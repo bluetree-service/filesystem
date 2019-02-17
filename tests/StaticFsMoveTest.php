@@ -23,9 +23,24 @@ class StaticFsMoveTest extends TestCase
 
     public function testMoveFile(): void
     {
-        Fs::move(StaticFsDelTest::TEST_DIR . 'test1', StaticFsDelTest::TEST_DIR . 'test2');
-    }
+        $data = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'file');
+        $this->assertTrue(Fs::validateComplexOutput($data));
 
+        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'file2');
+
+        $out = Fs::move(StaticFsDelTest::TEST_DIR . 'file', StaticFsDelTest::TEST_DIR . 'file2');
+
+        $this->assertTrue(Fs::validateComplexOutput($out));
+        $this->assertEquals(
+            [
+                'delete:' . StaticFsDelTest::TEST_DIR . 'file' => true,
+                'copy:' . StaticFsDelTest::TEST_DIR . 'file:' . StaticFsDelTest::TEST_DIR . 'file2' => true,
+            ],
+            $out
+        );
+        $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'file2');
+        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'file');
+    }
 
     public function tearDown(): void
     {
