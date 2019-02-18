@@ -42,6 +42,35 @@ class StaticFsMoveTest extends TestCase
         $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'file');
     }
 
+    public function testMoveDir(): void
+    {
+        $data = Fs::copy(__DIR__ . '/test-dirs/del/1', StaticFsDelTest::TEST_DIR . '1');
+        $this->assertTrue(Fs::validateComplexOutput($data));
+
+        $this->assertDirectoryNotExists(StaticFsDelTest::TEST_DIR . '2');
+
+        $out = Fs::move(StaticFsDelTest::TEST_DIR . '1', StaticFsDelTest::TEST_DIR . '2');
+
+        $this->assertTrue(Fs::validateComplexOutput($out));
+        $this->assertEquals(
+            [
+                'delete:' . StaticFsDelTest::TEST_DIR . '1/1-1/1-1-1/file2' => true,
+                'delete:' . StaticFsDelTest::TEST_DIR . '1/1-1/1-1-1/file' => true,
+                'delete:' . StaticFsDelTest::TEST_DIR . '1/1-1/1-1-1' => true,
+                'delete:' . StaticFsDelTest::TEST_DIR . '1/1-1' => true,
+                'delete:' . StaticFsDelTest::TEST_DIR . '1' => true,
+                'mkdir:' . StaticFsDelTest::TEST_DIR . '2' => true,
+                'mkdir:' . StaticFsDelTest::TEST_DIR . '2/1-1' => true,
+                'mkdir:' . StaticFsDelTest::TEST_DIR . '2/1-1/1-1-1' => true,
+                'copy:' . StaticFsDelTest::TEST_DIR . '1/1-1/1-1-1/file2:' . StaticFsDelTest::TEST_DIR . '2/1-1/1-1-1/file2' => true,
+                'copy:' . StaticFsDelTest::TEST_DIR . '1/1-1/1-1-1/file:' . StaticFsDelTest::TEST_DIR . '2/1-1/1-1-1/file' => true,
+            ],
+            $out
+        );
+        $this->assertFileExists(StaticFsDelTest::TEST_DIR . '2');
+        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . '1');
+    }
+
     public function tearDown(): void
     {
         $this->setUp();
