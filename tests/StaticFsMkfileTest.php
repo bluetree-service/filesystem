@@ -13,7 +13,7 @@ class StaticFsMkfileTest extends TestCase
 {
     public function setUp(): void
     {
-        \shell_exec('chmod 0777 -R ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
+        \shell_exec('    chmod -R 0777 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'test_file > /dev/null 2>&1');
     }
 
@@ -43,7 +43,7 @@ class StaticFsMkfileTest extends TestCase
         $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test_dir/test_file');
 
         Fs::mkdir(StaticFsDelTest::TEST_DIR . 'test_dir');
-        \shell_exec('chmod 0555 -R ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
+        \shell_exec('    chmod -R 0555 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
 
         $out = Fs::mkfile(StaticFsDelTest::TEST_DIR . 'test_dir', 'test_file');
 

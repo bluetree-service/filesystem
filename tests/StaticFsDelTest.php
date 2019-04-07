@@ -16,7 +16,7 @@ class StaticFsDelTest extends TestCase
 
     public function setUp(): void
     {
-        shell_exec('chmod 0777 -R ' . self::TEST_DIR . ' > /dev/null 2>&1');
+        shell_exec('    chmod -R 0777 ' . self::TEST_DIR . ' > /dev/null 2>&1');
         shell_exec('rm -r ' . self::TEST_DIR . 'del > /dev/null 2>&1');
     }
 

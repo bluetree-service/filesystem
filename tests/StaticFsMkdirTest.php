@@ -13,7 +13,7 @@ class StaticFsMkdirTest extends TestCase
 {
     public function setUp(): void
     {
-        \shell_exec('chmod 0777 -R ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
+        \shell_exec('    chmod -R 0777 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'new_dir > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'new_dir2 > /dev/null 2>&1');
     }

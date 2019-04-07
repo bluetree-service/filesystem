@@ -13,7 +13,7 @@ class StaticFsCopyTest extends TestCase
 {
     public function setUp(): void
     {
-        \shell_exec('chmod 0777 -R ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
+        \shell_exec('    chmod -R 0777 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'copy > /dev/null 2>&1');
     }
 
@@ -154,7 +154,7 @@ class StaticFsCopyTest extends TestCase
     public function testSingleFileWithError(): void
     {
         $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy');
-        \shell_exec('chmod 0555 -R ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
+        \shell_exec('    chmod -R 0555 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
 
         $out = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'copy');
 
