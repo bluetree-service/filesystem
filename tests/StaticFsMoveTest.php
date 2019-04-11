@@ -71,6 +71,24 @@ class StaticFsMoveTest extends TestCase
         $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . '1');
     }
 
+    public function testMoveWithException(): void
+    {
+        $data = Fs::mkdir(StaticFsDelTest::TEST_DIR . 'test');
+        $this->assertTrue(Fs::validateComplexOutput($data));
+        $data = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'test/file');
+        $this->assertTrue(Fs::validateComplexOutput($data));
+
+        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test/file2');
+
+        \shell_exec('chmod 0555 ' . StaticFsDelTest::TEST_DIR . 'test > /dev/null 2>&1');
+
+        $out = Fs::move(StaticFsDelTest::TEST_DIR . 'test/file', StaticFsDelTest::TEST_DIR . 'test/file2');
+
+        $this->assertEmpty($out);
+        $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'test/file');
+        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test/file2');
+    }
+
     public function tearDown(): void
     {
         $this->setUp();
