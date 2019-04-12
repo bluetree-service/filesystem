@@ -89,6 +89,51 @@ class StaticFsMoveTest extends TestCase
         $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test/file2');
     }
 
+    public function testMoveWithEvents(): void
+    {
+        $exceptionsExecutions = 0;
+        $afterExecutions = 0;
+        $beforeExecutions = 0;
+
+        $eventDispatcher = new EventDispatcher;
+        $eventDispatcher->setEventConfiguration([
+            FsInterface::MOVE_FILE_OR_DIR_EXCEPTION => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$exceptionsExecutions) {
+                        $exceptionsExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::MOVE_FILE_OR_DIR_AFTER => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$afterExecutions) {
+                        $afterExecutions++;
+                    },
+                ],
+            ],
+            FsInterface::MOVE_FILE_OR_DIR_BEFORE => [
+                'object' => 'BlueEvent\Event\BaseEvent',
+                'listeners' => [
+                    function () use (&$beforeExecutions) {
+                        $beforeExecutions++;
+                    },
+                ],
+            ],
+        ]);
+
+        Fs::configureEventHandler($eventDispatcher);
+
+        $this->testMoveFile();
+        $this->tearDown();
+        $this->testMoveWithException();
+
+        $this->assertEquals(1, $exceptionsExecutions);
+        $this->assertEquals(1, $afterExecutions);
+        $this->assertEquals(2, $beforeExecutions);
+    }
+
     public function tearDown(): void
     {
         $this->setUp();
