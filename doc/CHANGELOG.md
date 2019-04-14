@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.2.0.0 - 2019-04-14
+### Added
+* tests
+* Event handling
+* Some new functionalities
+* Execute callbacks on file/dir list
+### Changed
+* PHP version upgraded to 7.1
+* Code refactor and improvements
+* Documentation update
+
 ## 0.1.1.0 - 2018-12-20
 ### Changed
 * Fixed creating directory instead of copy file for `Fs::copy` when target is file
