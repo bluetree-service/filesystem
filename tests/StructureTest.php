@@ -33,14 +33,11 @@ class StructureTest extends TestCase
         $this->assertInstanceOf(\SplFileInfo::class, $dir[$key2][$key3][$key3 . '/file']);
     }
 
-    /**
-     * @todo add empty dir to test
-     */
     public function testReadStructure(): void
     {
         $structure = new Structure(__DIR__ . '/test-dirs/del', true);
         $list = $structure->returnPaths();
-        
+
         $this->assertNotEmpty($list);
         $this->checkEntries($list);
 
@@ -49,6 +46,27 @@ class StructureTest extends TestCase
 
         $this->assertNotEmpty($list);
         $this->checkEntries($list);
+
+        $emptyDir = __DIR__ . '/test-dirs/del/3';
+
+        if (!\file_exists($emptyDir)) {
+            mkdir($emptyDir);
+        }
+
+        $structure = new Structure(__DIR__ . '/test-dirs/del/3', true);
+        $list = $structure->returnPaths();
+
+        $this->assertNotEmpty($list);
+        $this->assertEmpty($list['dir']);
+        $this->assertEmpty($list['file']);
+
+        $list = $structure->getPaths();
+
+        $this->assertNotEmpty($list);
+        $this->assertEmpty($list['dir']);
+        $this->assertEmpty($list['file']);
+
+        rmdir($emptyDir);
     }
 
     /**
@@ -91,5 +109,77 @@ class StructureTest extends TestCase
         $list = $structure->getPaths();
         $this->assertEmpty($list['dir']);
         $this->assertEmpty($list['file']);
+    }
+
+    public function testProcessSplObjects(): void
+    {
+        $list = [];
+
+        $callback = function (\SplFileInfo $fileInfo, string $path) use (&$list) {
+            $list[$path] = [
+                $fileInfo->isDir(),
+                $fileInfo->getFilename(),
+            ];
+        };
+
+        $structure = new Structure(__DIR__ . '/test-dirs/del', true);
+        $structure->processSplObjects($callback, true);
+
+        $valid = [
+            __DIR__ . '/test-dirs/del/file' => [
+                false,
+                'file',
+            ],
+            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file2' => [
+                false,
+                'file2',
+            ],
+            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file' => [
+                false,
+                'file',
+            ],
+            __DIR__ . '/test-dirs/del/1/1-1/1-1-1' => [
+                true,
+                '1-1-1',
+            ],
+            __DIR__ . '/test-dirs/del/1/1-1' => [
+                true,
+                '1-1',
+            ],
+            __DIR__ . '/test-dirs/del/1' => [
+                true,
+                '1',
+            ],
+            __DIR__ . '/test-dirs/del/2/2-1/file' => [
+                false,
+                'file',
+            ],
+            __DIR__ . '/test-dirs/del/2/2-1/2-1-1/file' => [
+                false,
+                'file',
+            ],
+            __DIR__ . '/test-dirs/del/2/2-1/2-1-1' => [
+                true,
+                '2-1-1',
+            ],
+            __DIR__ . '/test-dirs/del/2/2-1/2-1-2/file' => [
+                false,
+                'file',
+            ],
+            __DIR__ . '/test-dirs/del/2/2-1/2-1-2' => [
+                true,
+                '2-1-2',
+            ],
+            __DIR__ . '/test-dirs/del/2/2-1' => [
+                true,
+                '2-1',
+            ],
+            __DIR__ . '/test-dirs/del/2' => [
+                true,
+                '2',
+            ],
+        ];
+
+        $this->assertEquals($valid, $list);
     }
 }

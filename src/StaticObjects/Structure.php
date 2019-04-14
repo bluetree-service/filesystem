@@ -18,6 +18,16 @@ class Structure implements FsInterface
     ];
 
     /**
+     * @var string
+     */
+    protected $path;
+
+    /**
+     * @var bool
+     */
+    protected $recursive;
+
+    /**
      * @param string $path
      * @param bool $recursive
      * @example new Structure('dir/some_dir')
@@ -25,6 +35,9 @@ class Structure implements FsInterface
      */
     public function __construct(string $path, bool $recursive = false)
     {
+        $this->path = $path;
+        $this->recursive = $recursive;
+
         $this->readDirectory($path, $recursive);
     }
 
@@ -65,6 +78,7 @@ class Structure implements FsInterface
                 continue;
             }
 
+            //@todo save dir asSplFileInfo
             if ($recursive && $element->isDir()) {
                 $list[$element->getRealPath()] = $this->readDirectoryRecursive($element->getRealPath(), true);
             } else {
@@ -114,6 +128,36 @@ class Structure implements FsInterface
     }
 
     /**
+     * @param callable $callback
+     * @param bool $reload
+     */
+    public function processSplObjects(callable $callback, bool $reload = true): void
+    {
+        $this->processSplObjectsStructure($callback, $this->dirTree);
+
+        if ($reload) {
+            $this->dirTree = $this->readDirectory($this->path, $this->recursive);
+        }
+    }
+
+    /**
+     * @param callable $callback
+     * @param array $array
+     */
+    protected function processSplObjectsStructure(callable $callback, array $array): void
+    {
+        foreach ($array as $path => $fileInfo) {
+            $isDir = \is_dir($path);
+            if (\is_array($fileInfo) && $isDir) {
+                $this->processSplObjectsStructure($callback, $fileInfo);
+                $callback(new \SplFileInfo($path), $path);
+            } else {
+                $callback($fileInfo, $path);
+            }
+        }
+    }
+
+    /**
      * transform array wit directory/files tree to list of paths grouped on files and directories
      *
      * @param array $array array to transform
@@ -130,7 +174,9 @@ class Structure implements FsInterface
         ];
 
         foreach ($array as $path => $fileInfo) {
-            if (\is_array($fileInfo) && \is_dir($path)) {
+            $isDir = \is_dir($path);
+
+            if (\is_array($fileInfo) && $isDir) {
                 $list = $this->returnPathsRecursive($fileInfo);
 
                 /** @var string $element */
@@ -140,8 +186,6 @@ class Structure implements FsInterface
                 }
 
                 $pathList['dir'][] = $path;
-            } elseif ($fileInfo instanceof \SplFileInfo && \is_dir($path)) {
-                $pathList['dir'][] = $fileInfo->getRealPath();
             } else {
                 /** @var \DirectoryIterator $fileInfo */
                 $pathList['file'][] = $fileInfo->getRealPath();
