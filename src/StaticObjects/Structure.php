@@ -130,10 +130,11 @@ class Structure implements FsInterface
     /**
      * @param callable $callback
      * @param bool $reload
+     * @param array $params (argument unpacking by ...)
      */
-    public function processSplObjects(callable $callback, bool $reload = true): void
+    public function processSplObjects(callable $callback, bool $reload = true, ...$params): void
     {
-        $this->processSplObjectsStructure($callback, $this->dirTree);
+        $this->processSplObjectsStructure($callback, $this->dirTree, ...$params);
 
         if ($reload) {
             $this->dirTree = $this->readDirectory($this->path, $this->recursive);
@@ -143,16 +144,17 @@ class Structure implements FsInterface
     /**
      * @param callable $callback
      * @param array $array
+     * @param array $params (argument unpacking by ...)
      */
-    protected function processSplObjectsStructure(callable $callback, array $array): void
+    protected function processSplObjectsStructure(callable $callback, array $array, ...$params): void
     {
         foreach ($array as $path => $fileInfo) {
             $isDir = \is_dir($path);
             if (\is_array($fileInfo) && $isDir) {
-                $this->processSplObjectsStructure($callback, $fileInfo);
-                $callback(new \SplFileInfo($path), $path);
+                $this->processSplObjectsStructure($callback, $fileInfo, ...$params);
+                $callback(new \SplFileInfo($path), $path, ...$params);
             } else {
-                $callback($fileInfo, $path);
+                $callback($fileInfo, $path, ...$params);
             }
         }
     }

@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.0.0 - 2019-05-06
+### Added
+* Argument unpacking for `Structure::processSplObjects` to provide some additional data to callback
+
 ## 0.2.0.0 - 2019-04-14
 ### Added
 * tests

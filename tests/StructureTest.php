@@ -114,8 +114,13 @@ class StructureTest extends TestCase
     public function testProcessSplObjects(): void
     {
         $list = [];
+        $skipThis = 'file2';
 
-        $callback = function (\SplFileInfo $fileInfo, string $path) use (&$list) {
+        $callback = function (\SplFileInfo $fileInfo, string $path, ...$params) use (&$list) {
+            if ($fileInfo->getFilename() === $params[0]) {
+                return;
+            }
+
             $list[$path] = [
                 $fileInfo->isDir(),
                 $fileInfo->getFilename(),
@@ -123,17 +128,18 @@ class StructureTest extends TestCase
         };
 
         $structure = new Structure(__DIR__ . '/test-dirs/del', true);
-        $structure->processSplObjects($callback, true);
+        $structure->processSplObjects($callback, true, $skipThis);
 
         $valid = [
             __DIR__ . '/test-dirs/del/file' => [
                 false,
                 'file',
             ],
-            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file2' => [
-                false,
-                'file2',
-            ],
+            //skipped by callback
+//            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file2' => [
+//                false,
+//                'file2',
+//            ],
             __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file' => [
                 false,
                 'file',
