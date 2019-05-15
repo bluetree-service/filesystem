@@ -57,7 +57,7 @@ class File extends Container implements ModelInterface
 
             if (!$bool) {
 //                Loader::callEvent('delete_file_object_instance_error', $this);
-                throw new Exception('unable to remove file: ' . $this->getFullPath());
+                throw new FsException('unable to remove file: ' . $this->getFullPath());
             }
         }
 
@@ -98,7 +98,7 @@ class File extends Container implements ModelInterface
 
         if (!$bool) {
 //            Loader::callEvent('save_file_object_instance_error', $this);
-            throw new Exception('unable to save file: ' . $this->getFullPath());
+            throw new FsException('unable to save file: ' . $this->getFullPath());
         }
 
 //        Loader::callEvent('save_file_object_instance_after', $this);
@@ -118,7 +118,7 @@ class File extends Container implements ModelInterface
 
         if (!Fs::exist($this->getFullPath())) {
 //            Loader::callEvent('load_file_object_instance_error', $this);
-            throw new Exception('file not exists: ' . $this->getFullPath());
+            throw new FsException('file not exists: ' . $this->getFullPath());
         }
 
         $content = file_get_contents($this->getFullPath());
@@ -181,7 +181,7 @@ class File extends Container implements ModelInterface
 
         if (!$bool) {
 //            Loader::callEvent('move_file_object_instance_error', [$this, $destination]);
-            throw new Exception(
+            throw new FsException(
                 'unable to move file:'
                 . $this->getFullPath()
                 . ' -> '
@@ -226,7 +226,7 @@ class File extends Container implements ModelInterface
 
         if (!$bool) {
 //            Loader::callEvent('copy_file_object_instance_error', [$this, $destination]);
-            throw new Exception(
+            throw new FsException(
                 'unable to copy file:'
                 . $this->getFullPath()
                 . ' -> '
@@ -270,7 +270,7 @@ class File extends Container implements ModelInterface
 
         if (!$bool) {
 //            Loader::callEvent('rename_file_object_instance_error', [$this, $name, $extension]);
-            throw new Exception(
+            throw new FsException(
                 'unable to rename file:'
                 . $this->getFullPath()
                 . ' -> '
