@@ -176,22 +176,35 @@ class Structure implements FsInterface
         ];
 
         foreach ($array as $path => $fileInfo) {
-            $isDir = \is_dir($path);
+            $pathList = $this->processNodeInfo($pathList, $fileInfo, $path);
+        }
 
-            if (\is_array($fileInfo) && $isDir) {
-                $list = $this->returnPathsRecursive($fileInfo);
+        return $pathList;
+    }
 
-                /** @var string $element */
-                foreach ($list as $element => $value) {
-                    $pathList = $this->setPath($pathList, $element, $value, 'file');
-                    $pathList = $this->setPath($pathList, $element, $value, 'dir');
-                }
+    /**
+     * @param array $pathList
+     * @param array|\DirectoryIterator $fileInfo
+     * @param string $path
+     * @return array
+     */
+    protected function processNodeInfo(array $pathList, $fileInfo, string $path): array
+    {
+        $isDir = \is_dir($path);
 
-                $pathList['dir'][] = $path;
-            } else {
-                /** @var \DirectoryIterator $fileInfo */
-                $pathList['file'][] = $fileInfo->getRealPath();
+        if (\is_array($fileInfo) && $isDir) {
+            $list = $this->returnPathsRecursive($fileInfo);
+
+            /** @var string $element */
+            foreach ($list as $element => $value) {
+                $pathList = $this->setPath($pathList, $element, $value, 'file');
+                $pathList = $this->setPath($pathList, $element, $value, 'dir');
             }
+
+            $pathList['dir'][] = $path;
+        } else {
+            /** @var \DirectoryIterator $fileInfo */
+            $pathList['file'][] = $fileInfo->getRealPath();
         }
 
         return $pathList;
