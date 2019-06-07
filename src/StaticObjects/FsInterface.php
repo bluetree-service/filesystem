@@ -2,6 +2,8 @@
 
 namespace BlueFilesystem\StaticObjects;
 
+use BlueEvent\Event\Base\Interfaces\EventDispatcherInterface;
+
 interface FsInterface
 {
     /**
@@ -37,4 +39,14 @@ interface FsInterface
     public const MOVE_FILE_OR_DIR_EXCEPTION = 'move_file_or_directory_error';
     public const MOVE_FILE_OR_DIR_BEFORE = 'move_file_or_directory_before';
     public const MOVE_FILE_OR_DIR_AFTER = 'move_file_or_directory_after';
+
+    public static function delete(string $path, bool $force = false): array;
+    public static function copy(string $source, string $target, bool $force = false): array;
+    public static function mkdir(string $path): array;
+    public static function mkfile(string $path, string $fileName, $data = null): bool;
+    public static function rename(string $source, string $target, bool $force = false): bool;
+    public static function move(string $source, string $target, bool $force = false): array;
+    public static function configureEventHandler(EventDispatcherInterface $eventHandler): void;
+    public static function removeEventHandler(): void;
+    public static function validateComplexOutput(array $output): bool;
 }
