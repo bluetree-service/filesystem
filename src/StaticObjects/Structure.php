@@ -2,7 +2,7 @@
 
 namespace BlueFilesystem\StaticObjects;
 
-class Structure implements FsInterface
+class Structure
 {
     /**
      * @var array
