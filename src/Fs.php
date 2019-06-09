@@ -2,26 +2,67 @@
 
 namespace BlueFilesystem;
 
+use BlueFilesystem\StaticObjects\{
+    FsInterface,
+    Fs as StaticFs,
+};
+
 class Fs
 {
-    public function __construct($path, $register = null)
+    /**
+     * @var string
+     */
+    protected $path;
+
+    /**
+     * @var null|FsInterface
+     */
+    protected $fileSystem;
+
+    /**
+     * @var array
+     */
+    protected $operationList = [];
+
+    /**
+     * @param string $path must be a directory or future directory
+     * @param FsInterface|null $fileSystem
+     */
+    public function __construct(string $path, ?FsInterface $fileSystem = null)
     {
-        if (is_null($register)) {
-            $this->register = new Register;
+        $this->path = $path;
+
+        if ($fileSystem) {
+            $this->fileSystem = $fileSystem;
+        } else {
+            $this->fileSystem = new StaticFs;
         }
 
-        $this->path = $path;
+        if (!$this->isExists()) {
+            $this->create();
+        }
     }
 
     /**
-     * remove file or directory with all content
+     * remove directory with all content
      *
      * @param string $path
-     * @return boolean|array information that operation was successfully, or NULL if path incorrect
+     * @param bool $force
+     * @return bool
      */
-    public function delete($path, $force = false)
+    public function delete($path, $force = false): bool
     {
-        
+        $this->operationList = $this->fileSystem::delete($path, $force);
+
+        return $this->fileSystem::validateComplexOutput($this->operationList);
+    }
+
+    /**
+     * @return array
+     */
+    public function getLatestOperationList(): array
+    {
+        return $this->operationList;
     }
 
     /**
@@ -61,7 +102,18 @@ class Fs
      */
     public function mkfile($path, $fileName, $data = null)
     {
+        //create file in given directory
+    }
+
+    public function mkfiles()
+    {
         
+    }
+
+    public function create()
+    {
+        //create directory with given path
+        //throw exception if unable to create
     }
 
     /**
@@ -126,9 +178,9 @@ class Fs
      * @param string $path
      * @return boolean TRUE if exists, FALSE if not
      */
-    public function exist($path)
+    public function isExists(): bool
     {
-        return file_exists($path);
+        return file_exists($this->path);
     }
 
     /**
