@@ -46,13 +46,13 @@ class Fs
     /**
      * remove directory with all content
      *
-     * @param string $path
+     * @param string|null $path
      * @param bool $force
      * @return bool
      */
-    public function delete($path, $force = false): bool
+    public function delete(?string $path = null, bool $force = false): bool
     {
-        $this->operationList = $this->fileSystem::delete($path, $force);
+        $this->operationList = $this->fileSystem::delete($path ?? $this->path, $force);
 
         return $this->fileSystem::validateComplexOutput($this->operationList);
     }
@@ -69,13 +69,16 @@ class Fs
      * copy file or directory to given source
      * if source directory not exists, create it
      *
-     * @param string $path
      * @param string $target
-     * @return boolean information that operation was successfully, or NULL if path incorrect
+     * @param string|null $path
+     * @param bool $force
+     * @return bool
      */
-    public function copy($path, $target)
+    public function copy(string $target, ?string $path, bool $force = false): bool
     {
-        
+        $this->operationList = $this->fileSystem::copy($path ?? $this->path, $target, $force);
+
+        return $this->fileSystem::validateComplexOutput($this->operationList);
     }
 
     /**
@@ -85,7 +88,14 @@ class Fs
      * @return boolean
      * @static
      */
-    public function mkdir($path)
+    public function mkdir(?string $path = null): bool
+    {
+        $this->operationList = $this->fileSystem::mkdir($path ?? $this->path);
+
+        return $this->fileSystem::validateComplexOutput($this->operationList);
+    }
+
+    public function mkdirs()
     {
         
     }
@@ -96,18 +106,29 @@ class Fs
      * @param string $path
      * @param string $fileName
      * @param mixed $data
-     * @return boolean information that operation was successfully, or NULL if path incorrect
-     * @example mkfile('directory/inn', 'file.txt')
-     * @example mkfile('directory/inn', 'file.txt', 'Lorem ipsum')
+     * @return bool
+     * @example mkfile('file.txt', 'directory/inn')
+     * @example mkfile('file.txt', 'directory/inn', 'Lorem ipsum')
      */
-    public function mkfile($path, $fileName, $data = null)
+    public function mkfile(string $fileName, ?string $path, $data = null)
     {
-        //create file in given directory
+        $this->operationList = $this->fileSystem::mkfile($path ?? $this->path, $fileName, $data);
+
+        return $this->fileSystem::validateComplexOutput($this->operationList);
     }
 
-    public function mkfiles()
+    /**
+     * @param array $files
+     * @return bool
+     * @example mkfiles([['name' => 'bar.txt', 'data' => 'lorem ipsum']])
+     * @example mkfiles([['path' => 'foo/', 'name' => 'bar.txt', 'data' => 'lorem ipsum']])
+     * @example mkfiles([['name' => 'bar.txt']])
+     */
+    public function mkfiles(array $files): bool
     {
-        
+        foreach ($files as $file) {
+            $this->mkfile();
+        }
     }
 
     public function create()
