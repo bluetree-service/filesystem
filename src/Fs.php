@@ -27,6 +27,7 @@ class Fs
     /**
      * @param string $path must be a directory or future directory
      * @param FsInterface|null $fileSystem
+     * @throws FsException
      */
     public function __construct(string $path, ?FsInterface $fileSystem = null)
     {
@@ -86,18 +87,30 @@ class Fs
      *
      * @param string $path
      * @return boolean
-     * @static
      */
-    public function mkdir(?string $path = null): bool
+    public function mkdir(string $path): bool
     {
-        $this->operationList = $this->fileSystem::mkdir($path ?? $this->path);
+        $this->operationList = $this->fileSystem::mkdir($path);
 
         return $this->fileSystem::validateComplexOutput($this->operationList);
     }
 
-    public function mkdirs()
+    /**
+     * @param array $dirs
+     * @return bool
+     */
+    public function mkdirs(array $dirs): bool
     {
-        
+        $operations = [];
+        $status = true;
+
+        foreach ($dirs as $dir) {
+            $status &= $this->mkdir($dir);
+            $operations[] = $this->operationList;
+        }
+
+        $this->operationList = $operations;
+        return $status;
     }
 
     /**
@@ -110,7 +123,7 @@ class Fs
      * @example mkfile('file.txt', 'directory/inn')
      * @example mkfile('file.txt', 'directory/inn', 'Lorem ipsum')
      */
-    public function mkfile(string $fileName, ?string $path, $data = null)
+    public function mkfile(string $fileName, ?string $path, $data = null): bool
     {
         $this->operationList = $this->fileSystem::mkfile($path ?? $this->path, $fileName, $data);
 
@@ -126,15 +139,31 @@ class Fs
      */
     public function mkfiles(array $files): bool
     {
+        $operations = [];
+        $status = true;
+
         foreach ($files as $file) {
-            $this->mkfile();
+            $status &= $this->mkfile($file['name'], $file['path'], $file['data'] ?? null);
+            $operations[] = $this->operationList;
         }
+
+        $this->operationList = $operations;
+        return $status;
     }
 
-    public function create()
+    /**
+     * @return $this
+     * @throws FsException
+     */
+    protected function create(): self
     {
-        //create directory with given path
-        //throw exception if unable to create
+        $status = $this->mkdir($this->path);
+
+        if (!$status) {
+            throw new FsException('Unable to create main directory: ' . $this->path);
+        }
+
+        return $this;
     }
 
     /**
