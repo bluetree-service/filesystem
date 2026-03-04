@@ -13,26 +13,28 @@ class StaticFsCopyTest extends TestCase
 {
     public function setUp(): void
     {
+        if (!is_dir(StaticFsDelTest::TEST_DIR)) {
+            mkdir(StaticFsDelTest::TEST_DIR, 0777, true);
+        }
+
         \shell_exec('    chmod -R 0777 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'copy > /dev/null 2>&1');
     }
 
-    //@todo copy file exceptions
-
     public function testCopyDirSuccess(): void
     {
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/2/2-1/2-1-1/file');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1/file2');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/2/2-1/2-1-1/file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1/file2');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1');
 
-        $out = Fs::copy(__DIR__ . '/test-dirs/del', StaticFsDelTest::TEST_DIR . 'copy');
+        $out = Fs::copy(StaticFsDelTest::TEST_EXAMPLES . '/del', StaticFsDelTest::TEST_DIR . 'copy');
 
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy/2/2-1/2-1-1/file');
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1/file2');
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1');
 
         $dir1 = StaticFsDelTest::TEST_DIR . 'copy';
-        $dir2 = __DIR__ . '/test-dirs/del';
+        $dir2 = StaticFsDelTest::TEST_EXAMPLES . '/del';
 
         $this->assertTrue(Fs::validateComplexOutput($out));
         $this->assertEquals(
@@ -58,20 +60,20 @@ class StaticFsCopyTest extends TestCase
 
     public function testCopyWithError(): void
     {
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/2/2-1/2-1-1/file');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1/file2');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/2/2-1/2-1-1/file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1/file2');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1');
 
         \chmod(StaticFsDelTest::TEST_DIR, 0555);
 
-        $out = Fs::copy(__DIR__ . '/test-dirs/del', StaticFsDelTest::TEST_DIR . 'copy');
+        $out = Fs::copy(StaticFsDelTest::TEST_EXAMPLES . '/del', StaticFsDelTest::TEST_DIR . 'copy');
 
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/2/2-1/2-1-1/file');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1/file2');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/2/2-1/2-1-1/file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1/file2');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/1/1-1/1-1-1');
 
         $dir1 = StaticFsDelTest::TEST_DIR . 'copy';
-        $dir2 = __DIR__ . '/test-dirs/del';
+        $dir2 = StaticFsDelTest::TEST_EXAMPLES . '/del';
 
         $this->assertFalse(Fs::validateComplexOutput($out));
         $this->assertEquals(
@@ -84,13 +86,13 @@ class StaticFsCopyTest extends TestCase
                 'mkdir:' . $dir1 . '/1' => 'mkdir(): No such file or directory',
                 'mkdir:' . $dir1 . '/1/1-1' => 'mkdir(): No such file or directory',
                 'mkdir:' . $dir1 . '/1/1-1/1-1-1' => 'mkdir(): No such file or directory',
-                'copy:' . $dir2 . '/1/1-1/1-1-1/file:' . $dir1 . '/1/1-1/1-1-1/file' => 'copy(' . $dir1 . '/1/1-1/1-1-1/file): failed to open stream: No such file or directory',
-                'copy:' . $dir2 . '/1/1-1/1-1-1/file2:' . $dir1 . '/1/1-1/1-1-1/file2' => 'copy(' . $dir1 . '/1/1-1/1-1-1/file2): failed to open stream: No such file or directory',
-                'copy:' . $dir2 . '/file:' . $dir1 . '/file' => 'copy(' . $dir1 . '/file): failed to open stream: No such file or directory',
-                'copy:' . $dir2 . '/2/2-1/2-1-1/file:' . $dir1 . '/2/2-1/2-1-1/file' => 'copy(' . $dir1 . '/2/2-1/2-1-1/file): failed to open stream: No such file or directory',
-                'copy:' . $dir2 . '/2/2-1/2-1-2/file:' . $dir1 . '/2/2-1/2-1-2/file' => 'copy(' . $dir1 . '/2/2-1/2-1-2/file): failed to open stream: No such file or directory',
-                'copy:' . $dir2 . '/2/2-1/file:' . $dir1 . '/2/2-1/file' => 'copy(' . $dir1 . '/2/2-1/file): failed to open stream: No such file or directory',
-                'copy:' . $dir2 . '/2/2-1/file:' . $dir1 . '/2/2-1/file' => 'copy(' . $dir1 . '/2/2-1/file): failed to open stream: No such file or directory',
+                'copy:' . $dir2 . '/1/1-1/1-1-1/file:' . $dir1 . '/1/1-1/1-1-1/file' => 'copy(' . $dir1 . '/1/1-1/1-1-1/file): Failed to open stream: No such file or directory',
+                'copy:' . $dir2 . '/1/1-1/1-1-1/file2:' . $dir1 . '/1/1-1/1-1-1/file2' => 'copy(' . $dir1 . '/1/1-1/1-1-1/file2): Failed to open stream: No such file or directory',
+                'copy:' . $dir2 . '/file:' . $dir1 . '/file' => 'copy(' . $dir1 . '/file): Failed to open stream: No such file or directory',
+                'copy:' . $dir2 . '/2/2-1/2-1-1/file:' . $dir1 . '/2/2-1/2-1-1/file' => 'copy(' . $dir1 . '/2/2-1/2-1-1/file): Failed to open stream: No such file or directory',
+                'copy:' . $dir2 . '/2/2-1/2-1-2/file:' . $dir1 . '/2/2-1/2-1-2/file' => 'copy(' . $dir1 . '/2/2-1/2-1-2/file): Failed to open stream: No such file or directory',
+                'copy:' . $dir2 . '/2/2-1/file:' . $dir1 . '/2/2-1/file' => 'copy(' . $dir1 . '/2/2-1/file): Failed to open stream: No such file or directory',
+                'copy:' . $dir2 . '/2/2-1/file:' . $dir1 . '/2/2-1/file' => 'copy(' . $dir1 . '/2/2-1/file): Failed to open stream: No such file or directory',
             ],
             $out
         );
@@ -100,18 +102,18 @@ class StaticFsCopyTest extends TestCase
     {
         \mkdir(StaticFsDelTest::TEST_DIR . 'copy');
 
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/del/2/2-1/2-1-1/file');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/del/1/1-1/1-1-1/file2');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy/del/1/1-1/1-1-1');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/del/2/2-1/2-1-1/file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/del/1/1-1/1-1-1/file2');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy/del/1/1-1/1-1-1');
 
-        $out = Fs::copy(__DIR__ . '/test-dirs/del', StaticFsDelTest::TEST_DIR . 'copy');
+        $out = Fs::copy(StaticFsDelTest::TEST_EXAMPLES . '/del', StaticFsDelTest::TEST_DIR . 'copy');
 
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy/del/2/2-1/2-1-1/file');
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy/del/1/1-1/1-1-1/file2');
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy/del/1/1-1/1-1-1');
 
         $dir1 = StaticFsDelTest::TEST_DIR . 'copy/del';
-        $dir2 = __DIR__ . '/test-dirs/del';
+        $dir2 = StaticFsDelTest::TEST_EXAMPLES . '/del';
 
         $this->assertTrue(Fs::validateComplexOutput($out));
         $this->assertEquals(
@@ -137,15 +139,15 @@ class StaticFsCopyTest extends TestCase
 
     public function testSingleFile(): void
     {
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy');
 
-        $out = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'copy');
+        $out = Fs::copy(StaticFsDelTest::TEST_EXAMPLES . '/del/file', StaticFsDelTest::TEST_DIR . 'copy');
 
         $this->assertTrue(Fs::validateComplexOutput($out));
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy');
         $this->assertEquals(
             [
-                'copy:' . __DIR__ . '/test-dirs/del/file:' . StaticFsDelTest::TEST_DIR . 'copy' => true
+                'copy:' . StaticFsDelTest::TEST_EXAMPLES . '/del/file:' . StaticFsDelTest::TEST_DIR . 'copy' => true
             ],
             $out
         );
@@ -153,17 +155,17 @@ class StaticFsCopyTest extends TestCase
 
     public function testSingleFileWithError(): void
     {
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy');
         \shell_exec('    chmod -R 0555 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
 
-        $out = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'copy');
+        $out = Fs::copy(StaticFsDelTest::TEST_EXAMPLES . '/del/file', StaticFsDelTest::TEST_DIR . 'copy');
 
         $this->assertFalse(Fs::validateComplexOutput($out));
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy');
         $this->assertEquals(
             [
-                'copy:' . __DIR__ . '/test-dirs/del/file:' . StaticFsDelTest::TEST_DIR . 'copy'
-                    => 'copy(' . StaticFsDelTest::TEST_DIR . 'copy' . '): failed to open stream: Permission denied'
+                'copy:' . StaticFsDelTest::TEST_EXAMPLES . '/del/file:' . StaticFsDelTest::TEST_DIR . 'copy'
+                    => 'copy(' . StaticFsDelTest::TEST_DIR . 'copy' . '): Failed to open stream: Permission denied'
             ],
             $out
         );
@@ -171,18 +173,18 @@ class StaticFsCopyTest extends TestCase
 
     public function testSingleFileExists(): void
     {
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'copy');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'copy');
         \file_put_contents(StaticFsDelTest::TEST_DIR . 'copy', 'test');
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy');
         $this->assertEquals('test', \file_get_contents(StaticFsDelTest::TEST_DIR . 'copy'));
 
-        $out = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'copy');
+        $out = Fs::copy(StaticFsDelTest::TEST_EXAMPLES . '/del/file', StaticFsDelTest::TEST_DIR . 'copy');
 
         $this->assertTrue(Fs::validateComplexOutput($out));
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'copy');
         $this->assertEquals(
             [
-                'copy:' . __DIR__ . '/test-dirs/del/file:' . StaticFsDelTest::TEST_DIR . 'copy' => true
+                'copy:' . StaticFsDelTest::TEST_EXAMPLES . '/del/file:' . StaticFsDelTest::TEST_DIR . 'copy' => true
             ],
             $out
         );

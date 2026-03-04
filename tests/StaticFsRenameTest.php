@@ -13,6 +13,10 @@ class StaticFsRenameTest extends TestCase
 {
     public function setUp(): void
     {
+        if (!is_dir(StaticFsDelTest::TEST_DIR)) {
+            mkdir(StaticFsDelTest::TEST_DIR, 0777, true);
+        }
+
         \shell_exec('    chmod -R 0777 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'test > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'file > /dev/null 2>&1');
@@ -23,40 +27,40 @@ class StaticFsRenameTest extends TestCase
 
     public function testRenameFile(): void
     {
-        $data = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'file');
+        $data = Fs::copy(StaticFsDelTest::TEST_EXAMPLES . '/del/file', StaticFsDelTest::TEST_DIR . 'file');
         $this->assertTrue(Fs::validateComplexOutput($data));
 
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'file2');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'file2');
 
         $out = Fs::rename(StaticFsDelTest::TEST_DIR . 'file', StaticFsDelTest::TEST_DIR . 'file2');
 
         $this->assertTrue($out);
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'file2');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'file');
     }
 
     public function testRenameDir(): void
     {
-        $data = Fs::copy(__DIR__ . '/test-dirs/del/1', StaticFsDelTest::TEST_DIR . '1');
+        $data = Fs::copy(StaticFsDelTest::TEST_EXAMPLES . '/del/1', StaticFsDelTest::TEST_DIR . '1');
         $this->assertTrue(Fs::validateComplexOutput($data));
 
-        $this->assertDirectoryNotExists(StaticFsDelTest::TEST_DIR . '2');
+        $this->assertDirectoryDoesNotExist(StaticFsDelTest::TEST_DIR . '2');
 
         $out = Fs::rename(StaticFsDelTest::TEST_DIR . '1', StaticFsDelTest::TEST_DIR . '2');
 
         $this->assertTrue($out);
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . '2');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . '1');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . '1');
     }
 
     public function testRenameWithException(): void
     {
         $data = Fs::mkdir(StaticFsDelTest::TEST_DIR . 'test');
         $this->assertTrue(Fs::validateComplexOutput($data));
-        $data = Fs::copy(__DIR__ . '/test-dirs/del/file', StaticFsDelTest::TEST_DIR . 'test/file');
+        $data = Fs::copy(StaticFsDelTest::TEST_EXAMPLES . '/del/file', StaticFsDelTest::TEST_DIR . 'test/file');
         $this->assertTrue(Fs::validateComplexOutput($data));
 
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test/file2');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test/file2');
 
         \shell_exec('chmod 0555 ' . StaticFsDelTest::TEST_DIR . 'test > /dev/null 2>&1');
 
@@ -64,7 +68,7 @@ class StaticFsRenameTest extends TestCase
 
         $this->assertFalse($out);
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'test/file');
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test/file2');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test/file2');
     }
 
     public function testRenameWithEvents(): void

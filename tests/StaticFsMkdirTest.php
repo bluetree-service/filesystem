@@ -13,6 +13,10 @@ class StaticFsMkdirTest extends TestCase
 {
     public function setUp(): void
     {
+        if (!is_dir(StaticFsDelTest::TEST_DIR)) {
+            mkdir(StaticFsDelTest::TEST_DIR, 0777, true);
+        }
+
         \shell_exec('    chmod -R 0777 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'new_dir > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'new_dir2 > /dev/null 2>&1');
@@ -20,16 +24,16 @@ class StaticFsMkdirTest extends TestCase
 
     public function testDirectoryRecursive(): void
     {
-        $out1 = Fs::mkdir(__DIR__ . '/playground/new_dir/subdir1/subdir2/');
+        $out1 = Fs::mkdir(StaticFsDelTest::TEST_DIR . '/new_dir/subdir1/subdir2/');
 
         $this->assertNotEmpty($out1);
 
         $this->assertTrue(Fs::validateComplexOutput($out1));
         $this->assertEquals(
             [
-                __DIR__ . '/playground/new_dir/' => true,
-                __DIR__ . '/playground/new_dir/subdir1/' => true,
-                __DIR__ . '/playground/new_dir/subdir1/subdir2/' => true,
+                StaticFsDelTest::TEST_DIR . '/new_dir/' => true,
+                StaticFsDelTest::TEST_DIR . '/new_dir/subdir1/' => true,
+                StaticFsDelTest::TEST_DIR . '/new_dir/subdir1/subdir2/' => true,
             ],
             $out1
         );
@@ -37,8 +41,8 @@ class StaticFsMkdirTest extends TestCase
 
     public function testCreateDirectory(): void
     {
-        $out1 = Fs::mkdir(__DIR__ . '/playground/new_dir');
-        $out2 = Fs::mkdir(__DIR__ . '/playground/new_dir2/');
+        $out1 = Fs::mkdir(StaticFsDelTest::TEST_DIR . '/new_dir');
+        $out2 = Fs::mkdir(StaticFsDelTest::TEST_DIR . '/new_dir2/');
 
         $this->assertNotEmpty($out1);
         $this->assertNotEmpty($out2);
@@ -46,24 +50,24 @@ class StaticFsMkdirTest extends TestCase
         $this->assertTrue(Fs::validateComplexOutput($out1));
         $this->assertTrue(Fs::validateComplexOutput($out2));
 
-        $this->assertEquals([__DIR__ . '/playground/new_dir/' => true], $out1);
-        $this->assertEquals([__DIR__ . '/playground/new_dir2/' => true], $out2);
+        $this->assertEquals([StaticFsDelTest::TEST_DIR . '/new_dir/' => true], $out1);
+        $this->assertEquals([StaticFsDelTest::TEST_DIR . '/new_dir2/' => true], $out2);
     }
 
     public function testCreateDirWithError(): void
     {
         \shell_exec('chmod -w -R ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
 
-        $out1 = Fs::mkdir(__DIR__ . '/playground/new_dir/subdir1/subdir2/');
+        $out1 = Fs::mkdir(StaticFsDelTest::TEST_DIR . '/new_dir/subdir1/subdir2/');
 
         $this->assertNotEmpty($out1);
         $this->assertFalse(Fs::validateComplexOutput($out1));
-        $this->assertEquals([__DIR__ . '/playground/new_dir/' => 'mkdir(): Permission denied'], $out1);
+        $this->assertEquals([StaticFsDelTest::TEST_DIR . '/new_dir/' => 'mkdir(): Permission denied'], $out1);
     }
 
     public function testCreateDirWithIncorrectChars(): void
     {
-        $out1 = Fs::mkdir(__DIR__ . '/playground/new_dir:?');
+        $out1 = Fs::mkdir(StaticFsDelTest::TEST_DIR . '/new_dir:?');
 
         $this->assertEmpty($out1);
         $this->assertFalse(Fs::validateComplexOutput($out1));

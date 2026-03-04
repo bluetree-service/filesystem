@@ -9,25 +9,29 @@ class StructureTest extends TestCase
 {
     public function testFileExists(): void
     {
-        $this->assertTrue(Structure::exist(__DIR__ . '/test-dirs'));
-        $this->assertTrue(Structure::exist(__DIR__ . '/test-dirs/del/file'));
-        $this->assertFalse(Structure::exist(__DIR__ . '/playground-fake'));
+        if (!is_dir(StaticFsDelTest::TEST_DIR)) {
+            mkdir(StaticFsDelTest::TEST_DIR, 0777, true);
+        }
+
+        $this->assertTrue(Structure::exist(StaticFsDelTest::TEST_EXAMPLES));
+        $this->assertTrue(Structure::exist(StaticFsDelTest::TEST_EXAMPLES . '/del/file'));
+        $this->assertFalse(Structure::exist(StaticFsDelTest::BASE_DIR . '/playground-fake'));
     }
 
     public function testReadDirectory(): void
     {
-        $key1 = __DIR__ . '/test-dirs/del/file';
-        $key2 = __DIR__ . '/test-dirs/del/2';
-        $key3 = __DIR__ . '/test-dirs/del/2/2-1';
+        $key1 = StaticFsDelTest::TEST_EXAMPLES . '/del/file';
+        $key2 = StaticFsDelTest::TEST_EXAMPLES . '/del/2';
+        $key3 = StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1';
 
-        $structure = new Structure(__DIR__ . '/test-dirs/del');
+        $structure = new Structure(StaticFsDelTest::TEST_EXAMPLES . '/del');
 
         $dir = $structure->getReadDirectory();
         $this->assertNotEmpty($dir);
         $this->assertArrayHasKey($key1, $dir);
         $this->assertInstanceOf(\SplFileInfo::class, $dir[$key1]);
 
-        $dir = $structure->readDirectory(__DIR__ . '/test-dirs/del', true);
+        $dir = $structure->readDirectory(StaticFsDelTest::TEST_EXAMPLES . '/del', true);
         $this->assertNotEmpty($dir);
         $this->assertArrayHasKey($key3, $dir[$key2]);
         $this->assertInstanceOf(\SplFileInfo::class, $dir[$key2][$key3][$key3 . '/file']);
@@ -35,7 +39,7 @@ class StructureTest extends TestCase
 
     public function testReadStructure(): void
     {
-        $structure = new Structure(__DIR__ . '/test-dirs/del', true);
+        $structure = new Structure(StaticFsDelTest::TEST_EXAMPLES . '/del', true);
         $list = $structure->returnPaths();
 
         $this->assertNotEmpty($list);
@@ -47,13 +51,13 @@ class StructureTest extends TestCase
         $this->assertNotEmpty($list);
         $this->checkEntries($list);
 
-        $emptyDir = __DIR__ . '/test-dirs/del/3';
+        $emptyDir = StaticFsDelTest::TEST_EXAMPLES . '/del/3';
 
         if (!\file_exists($emptyDir)) {
             mkdir($emptyDir);
         }
 
-        $structure = new Structure(__DIR__ . '/test-dirs/del/3', true);
+        $structure = new Structure(StaticFsDelTest::TEST_EXAMPLES . '/del/3', true);
         $list = $structure->returnPaths();
 
         $this->assertNotEmpty($list);
@@ -75,21 +79,21 @@ class StructureTest extends TestCase
     protected function checkEntries(array $list): void
     {
         $dirs = [
-            __DIR__ . '/test-dirs/del/1/1-1/1-1-1',
-            __DIR__ . '/test-dirs/del/1/1-1',
-            __DIR__ . '/test-dirs/del/1',
-            __DIR__ . '/test-dirs/del/2/2-1/2-1-1',
-            __DIR__ . '/test-dirs/del/2/2-1/2-1-2',
-            __DIR__ . '/test-dirs/del/2/2-1',
-            __DIR__ . '/test-dirs/del/2',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/1/1-1/1-1-1',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/1/1-1',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/1',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/2-1-1',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/2-1-2',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2',
         ];
         $files = [
-            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file',
-            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file2',
-            __DIR__ . '/test-dirs/del/file',
-            __DIR__ . '/test-dirs/del/2/2-1/2-1-1/file',
-            __DIR__ . '/test-dirs/del/2/2-1/2-1-2/file',
-            __DIR__ . '/test-dirs/del/2/2-1/file',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/1/1-1/1-1-1/file',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/1/1-1/1-1-1/file2',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/file',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/2-1-1/file',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/2-1-2/file',
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/file',
         ];
 
         foreach ($dirs as $dir) {
@@ -103,7 +107,7 @@ class StructureTest extends TestCase
 
     public function testReadDirectoryForNotExisting(): void
     {
-        $structure = new Structure(__DIR__ . '/playground-fake');
+        $structure = new Structure(StaticFsDelTest::BASE_DIR . '/playground-fake');
         $this->assertEmpty($structure->getReadDirectory());
 
         $list = $structure->getPaths();
@@ -127,60 +131,60 @@ class StructureTest extends TestCase
             ];
         };
 
-        $structure = new Structure(__DIR__ . '/test-dirs/del', true);
+        $structure = new Structure(StaticFsDelTest::TEST_EXAMPLES . '/del', true);
         $structure->processSplObjects($callback, true, $skipThis);
 
         $valid = [
-            __DIR__ . '/test-dirs/del/file' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/file' => [
                 false,
                 'file',
             ],
             //skipped by callback
-//            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file2' => [
+//            __DIR__ . '/del/1/1-1/1-1-1/file2' => [
 //                false,
 //                'file2',
 //            ],
-            __DIR__ . '/test-dirs/del/1/1-1/1-1-1/file' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/1/1-1/1-1-1/file' => [
                 false,
                 'file',
             ],
-            __DIR__ . '/test-dirs/del/1/1-1/1-1-1' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/1/1-1/1-1-1' => [
                 true,
                 '1-1-1',
             ],
-            __DIR__ . '/test-dirs/del/1/1-1' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/1/1-1' => [
                 true,
                 '1-1',
             ],
-            __DIR__ . '/test-dirs/del/1' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/1' => [
                 true,
                 '1',
             ],
-            __DIR__ . '/test-dirs/del/2/2-1/file' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/file' => [
                 false,
                 'file',
             ],
-            __DIR__ . '/test-dirs/del/2/2-1/2-1-1/file' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/2-1-1/file' => [
                 false,
                 'file',
             ],
-            __DIR__ . '/test-dirs/del/2/2-1/2-1-1' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/2-1-1' => [
                 true,
                 '2-1-1',
             ],
-            __DIR__ . '/test-dirs/del/2/2-1/2-1-2/file' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/2-1-2/file' => [
                 false,
                 'file',
             ],
-            __DIR__ . '/test-dirs/del/2/2-1/2-1-2' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1/2-1-2' => [
                 true,
                 '2-1-2',
             ],
-            __DIR__ . '/test-dirs/del/2/2-1' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2/2-1' => [
                 true,
                 '2-1',
             ],
-            __DIR__ . '/test-dirs/del/2' => [
+            StaticFsDelTest::TEST_EXAMPLES . '/del/2' => [
                 true,
                 '2',
             ],

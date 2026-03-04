@@ -11,31 +11,37 @@ use BlueEvent\Event\Base\EventDispatcher;
 
 class StaticFsDelTest extends TestCase
 {
-    public const TEST_DIR = __DIR__ . '/playground/';
+    public const BASE_DIR = '/tmp/test';
+    public const TEST_DIR = self::BASE_DIR . '/playground/';
     public const TEST_DIR_KEY = 'delete:' . self::TEST_DIR;
+    public const TEST_EXAMPLES = __DIR__ . '/test-dirs';
 
     public function setUp(): void
     {
+        if (!is_dir(self::TEST_DIR)) {
+            mkdir(self::TEST_DIR, 0777, true);
+        }
+
         shell_exec('    chmod -R 0777 ' . self::TEST_DIR . ' > /dev/null 2>&1');
         shell_exec('rm -r ' . self::TEST_DIR . 'del > /dev/null 2>&1');
     }
 
     public function testDeleteWhenPathDontExists(): void
     {
-        $result = Fs::delete(__DIR__ . '/playground-fake');
+        $result = Fs::delete(self::BASE_DIR . '/playground-fake');
         $this->assertEmpty($result);
         $this->assertFalse(Fs::validateComplexOutput($result));
     }
 
     public function testDeleteSuccess(): void
     {
-        shell_exec('cp -r ' . __DIR__ . '/test-dirs/del ' . __DIR__ . '/playground');
+        shell_exec('cp -r ' . self::TEST_EXAMPLES . '/del ' . self::BASE_DIR . '/playground');
 
         $this->assertFileExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1');
 
-        $result = Fs::delete(__DIR__ . '/playground/del');
+        $result = Fs::delete(self::BASE_DIR . '/playground/del');
 
         $this->assertEquals(
             [
@@ -58,14 +64,14 @@ class StaticFsDelTest extends TestCase
         );
 
         $this->assertTrue(Fs::validateComplexOutput($result));
-        $this->assertFileNotExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
-        $this->assertFileNotExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
-        $this->assertFileNotExists(self::TEST_DIR . 'del/1/1-1/1-1-1');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/1/1-1/1-1-1');
     }
 
     public function testDeleteError(): void
     {
-        shell_exec('cp -r ' . __DIR__ . '/test-dirs/del ' . __DIR__ . '/playground');
+        shell_exec('cp -r ' . self::TEST_EXAMPLES . '/del ' . self::BASE_DIR . '/playground');
 
         $this->assertFileExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
@@ -74,7 +80,7 @@ class StaticFsDelTest extends TestCase
         chmod(self::TEST_DIR . 'del/2/2-1/2-1-1', 0555);
         chmod(self::TEST_DIR . 'del/1/1-1/1-1-1', 0555);
 
-        $result = Fs::delete(__DIR__ . '/playground/del');
+        $result = Fs::delete(self::BASE_DIR . '/playground/del');
 
         $this->assertEquals(
             [
@@ -100,13 +106,13 @@ class StaticFsDelTest extends TestCase
         $this->assertFileExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1');
-        $this->assertFileNotExists(self::TEST_DIR . 'del/2/2-1/file');
-        $this->assertFileNotExists(self::TEST_DIR . 'del/file');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/2/2-1/file');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/file');
     }
 
     public function testDeleteWithForce(): void
     {
-        shell_exec('cp -r ' . __DIR__ . '/test-dirs/del ' . __DIR__ . '/playground');
+        shell_exec('cp -r ' . self::TEST_EXAMPLES . '/del ' . self::BASE_DIR . '/playground');
 
         $this->assertFileExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
@@ -115,7 +121,7 @@ class StaticFsDelTest extends TestCase
         chmod(self::TEST_DIR . 'del/2/2-1/2-1-1', 0555);
         chmod(self::TEST_DIR . 'del/1/1-1/1-1-1', 0555);
 
-        $result = Fs::delete(__DIR__ . '/playground/del');
+        $result = Fs::delete(self::BASE_DIR . '/playground/del');
 
         $this->assertEquals(
             [
@@ -141,10 +147,10 @@ class StaticFsDelTest extends TestCase
         $this->assertFileExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
         $this->assertFileExists(self::TEST_DIR . 'del/1/1-1/1-1-1');
-        $this->assertFileNotExists(self::TEST_DIR . 'del/2/2-1/file');
-        $this->assertFileNotExists(self::TEST_DIR . 'del/file');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/2/2-1/file');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/file');
 
-        $result = Fs::delete(__DIR__ . '/playground/del', true);
+        $result = Fs::delete(self::BASE_DIR . '/playground/del', true);
 
         $this->assertEquals(
             [
@@ -163,9 +169,9 @@ class StaticFsDelTest extends TestCase
         );
 
         $this->assertTrue(Fs::validateComplexOutput($result));
-        $this->assertFileNotExists(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
-        $this->assertFileNotExists(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
-        $this->assertFileNotExists(self::TEST_DIR . 'del/1/1-1/1-1-1');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/2/2-1/2-1-1/file');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/1/1-1/1-1-1/file2');
+        $this->assertFileDoesNotExist(self::TEST_DIR . 'del/1/1-1/1-1-1');
     }
 
     public function testDeleteEvents(): void

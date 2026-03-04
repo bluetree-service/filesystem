@@ -100,9 +100,9 @@ class Fs implements FsInterface
     {
         try {
             if ($isDir) {
-                $operationList['delete:' . $path] = rmdir($path);
+                $operationList['delete:' . $path] = self::withErrorExceptions(static fn () => rmdir($path));
             } else {
-                $operationList['delete:' . $path] = unlink($path);
+                $operationList['delete:' . $path] = self::withErrorExceptions(static fn () => unlink($path));
             }
         } catch (\Throwable $exception) {
             $operationList['delete:' . $path] = $exception->getMessage();
@@ -149,7 +149,7 @@ class Fs implements FsInterface
         $key = $source . PATH_SEPARATOR . $target;
 
         try {
-            $operationList['copy:' . $key] = \copy($source, $target);
+            $operationList['copy:' . $key] = self::withErrorExceptions(static fn () => \copy($source, $target));
         } catch (\Throwable $exception) {
             $operationList['copy:' . $key] = $exception->getMessage();
             self::triggerEvent(self::COPY_PATH_CONTENT_EXCEPTION, [&$operationList, $key, $exception]);
@@ -191,7 +191,7 @@ class Fs implements FsInterface
             $newTarget = $target . $dirToCopy . $file;
 
             try {
-                $operationList['copy:' . $mainFile . ':' . $newTarget] = \copy($mainFile, $newTarget);
+                $operationList['copy:' . $mainFile . ':' . $newTarget] = self::withErrorExceptions(static fn () => \copy($mainFile, $newTarget));
             } catch (\Throwable $exception) {
                 $operationList['copy:' . $mainFile . ':' . $newTarget] = $exception->getMessage();
                 self::triggerEvent(self::COPY_PATH_CONTENT_EXCEPTION, [&$operationList, $exception]);
@@ -243,7 +243,7 @@ class Fs implements FsInterface
     protected static function tryMkdir(array $operationList, string $dir, string $eventName): array
     {
         try {
-            $operationList['mkdir:' . $dir] = \mkdir($dir);
+            $operationList['mkdir:' . $dir] = self::withErrorExceptions(static fn () => mkdir($dir));
         } catch (\Throwable $exception) {
             $operationList['mkdir:' . $dir] = $exception->getMessage();
             self::triggerEvent($eventName, [&$operationList, $dir, $exception]);
@@ -281,7 +281,7 @@ class Fs implements FsInterface
             }
 
             try {
-                $operationList[$newPath] = \mkdir($newPath);
+                $operationList[$newPath] = self::withErrorExceptions(static fn () => \mkdir($newPath));
                 self::triggerEvent(self::CREATE_PATH_AFTER, [$newPath]);
             } catch (\Throwable $exception) {
                 self::triggerEvent(self::CREATE_PATH_EXCEPTION, [$newPath]);
@@ -323,14 +323,16 @@ class Fs implements FsInterface
         }
 
         try {
-            $fileResource = \fopen($path . DIRECTORY_SEPARATOR . $fileName, 'wb');
+            $fileResource = self::withErrorExceptions(
+                static fn () => \fopen($path . DIRECTORY_SEPARATOR . $fileName, 'wb')
+            );
 
             if ($data) {
                 $status = \fwrite($fileResource, $data);
             }
 
             self::triggerEvent(self::CREATE_FILE_AFTER, [$path, $fileName]);
-            fclose($fileResource);
+            \fclose($fileResource);
             $status = true;
         } catch (\Throwable $exception) {
             self::triggerEvent(self::CREATE_FILE_EXCEPTION, [$path, $fileName, $exception]);
@@ -372,7 +374,7 @@ class Fs implements FsInterface
 
         if ($status) {
             try {
-                $status = \rename($source, $target);
+                $status = self::withErrorExceptions(static fn () => \rename($source, $target));
                 self::triggerEvent(self::RENAME_FILE_OR_DIR_AFTER, [$source, $target]);
             } catch (\Throwable $exception) {
                 $status = false;
@@ -462,6 +464,28 @@ class Fs implements FsInterface
     {
         if (self::$event instanceof EventDispatcherInterface) {
             self::$event->triggerEvent($name, $data);
+        }
+    }
+
+    /**
+     * @param callable $fn
+     * @return mixed
+     */
+    protected static function withErrorExceptions(callable $fn): mixed {
+        \set_error_handler(
+            static function (int $severity, string $message, string $file, int $line): bool {
+                if ($severity === E_WARNING) {
+                    throw new \ErrorException($message, 0, $severity, $file, $line);
+                }
+                return false;
+
+            }
+        );
+
+        try {
+            return $fn();
+        } finally {
+            restore_error_handler();
         }
     }
 }

@@ -9,17 +9,21 @@ use BlueFilesystem\StaticObjects\{
 };
 use BlueEvent\Event\Base\EventDispatcher;
 
-class StaticFsMkfileTest extends TestCase
+class StaticFsMkFileTest extends TestCase
 {
     public function setUp(): void
     {
+        if (!is_dir(StaticFsDelTest::TEST_DIR)) {
+            mkdir(StaticFsDelTest::TEST_DIR, 0777, true);
+        }
+
         \shell_exec('    chmod -R 0777 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'test_file > /dev/null 2>&1');
     }
 
     public function testCreateFile(): void
     {
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test_file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test_file');
 
         $out = Fs::mkfile(StaticFsDelTest::TEST_DIR, 'test_file');
 
@@ -29,7 +33,7 @@ class StaticFsMkfileTest extends TestCase
 
     public function testCreateFileWithContent(): void
     {
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test_file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test_file');
 
         $out = Fs::mkfile(StaticFsDelTest::TEST_DIR, 'test_file', 'test content');
 
@@ -40,7 +44,7 @@ class StaticFsMkfileTest extends TestCase
 
     public function testCreateFileWithError(): void
     {
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test_dir/test_file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test_dir/test_file');
 
         Fs::mkdir(StaticFsDelTest::TEST_DIR . 'test_dir');
         \shell_exec('    chmod -R 0555 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
@@ -48,17 +52,17 @@ class StaticFsMkfileTest extends TestCase
         $out = Fs::mkfile(StaticFsDelTest::TEST_DIR . 'test_dir', 'test_file');
 
         $this->assertFalse($out);
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test_dir/test_file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test_dir/test_file');
     }
 
     public function testCreateFileWithIncorrectChars(): void
     {
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test_file?:/');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test_file?:/');
 
         $out = Fs::mkfile(StaticFsDelTest::TEST_DIR, 'test_file?:/');
 
         $this->assertFalse($out);
-        $this->assertFileNotExists(StaticFsDelTest::TEST_DIR . 'test_file?:/');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test_file?:/');
     }
 
     public function testMkfileWithEvents(): void
