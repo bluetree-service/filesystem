@@ -1,7 +1,24 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## 0.4.0.0 - 2026-03-0
+## 0.4.0.0 - 2026-03-05
+### Added
+* Composer scripts for testing
+* Makefile for easier development
+* Testing on multiple PHP versions
+* Code coverage report generation
+* GitHub Actions for CI/CD
+* Parameters and return types
+* Variable types
+* Some small improvements
+### Changed
+* Minimal PHP version set to 8.2
+* Updated required libraries
+* some method logic
+* improved tests
+### Removed
+* php-coveralls
+
 
 ## 0.3.0.0 - 2019-05-06
 ### Added
