@@ -19,6 +19,7 @@ class StaticFsMoveTest extends TestCase
 
         \shell_exec('chmod -R 0777 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'test > /dev/null 2>&1');
+        \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'test2 > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'file > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'file2 > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . '1 > /dev/null 2>&1');
@@ -91,6 +92,14 @@ class StaticFsMoveTest extends TestCase
         $this->assertEmpty($out);
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'test/file');
         $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test/file2');
+
+        \shell_exec('chmod 0444 ' . StaticFsDelTest::TEST_DIR . 'test/file > /dev/null 2>&1');
+
+        $out = Fs::move(StaticFsDelTest::TEST_DIR . 'test/', StaticFsDelTest::TEST_DIR . 'test2/');
+
+        $this->assertEmpty($out);
+        $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'test2/file');
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test2/file2');
     }
 
     public function testMoveWithEvents(): void
@@ -133,9 +142,9 @@ class StaticFsMoveTest extends TestCase
         $this->tearDown();
         $this->testMoveWithException();
 
-        $this->assertEquals(1, $exceptionsExecutions);
+        $this->assertEquals(2, $exceptionsExecutions);
         $this->assertEquals(1, $afterExecutions);
-        $this->assertEquals(2, $beforeExecutions);
+        $this->assertEquals(3, $beforeExecutions);
     }
 
     public function tearDown(): void

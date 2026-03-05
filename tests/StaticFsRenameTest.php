@@ -69,6 +69,13 @@ class StaticFsRenameTest extends TestCase
         $this->assertFalse($out);
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'test/file');
         $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test/file2');
+
+        $out = Fs::rename('/not_existing', StaticFsDelTest::TEST_DIR);
+        $this->assertFalse($out);
+
+        $out = Fs::rename(StaticFsDelTest::TEST_DIR . 'test/file', StaticFsDelTest::TEST_DIR . 'test/file:?*');
+        $this->assertFalse($out);
+        $this->assertFileDoesNotExist(StaticFsDelTest::TEST_DIR . 'test/file:?*');
     }
 
     public function testRenameWithEvents(): void
@@ -111,9 +118,9 @@ class StaticFsRenameTest extends TestCase
         $this->tearDown();
         $this->testRenameWithException();
 
-        $this->assertEquals(1, $exceptionsExecutions);
+        $this->assertEquals(4, $exceptionsExecutions);
         $this->assertEquals(1, $afterExecutions);
-        $this->assertEquals(2, $beforeExecutions);
+        $this->assertEquals(4, $beforeExecutions);
     }
 
     public function tearDown(): void

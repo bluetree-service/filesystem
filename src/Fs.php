@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BlueFilesystem;
 
 use BlueFilesystem\StaticObjects\{
@@ -12,17 +14,17 @@ class Fs
     /**
      * @var string
      */
-    protected $path;
+    protected string $path;
 
     /**
      * @var null|FsInterface
      */
-    protected $fileSystem;
+    protected ?FsInterface $fileSystem;
 
     /**
      * @var array
      */
-    protected $operationList = [];
+    protected array $operationList = [];
 
     /**
      * @param string $path must be a directory or future directory
@@ -36,7 +38,7 @@ class Fs
         if ($fileSystem) {
             $this->fileSystem = $fileSystem;
         } else {
-            $this->fileSystem = new StaticFs;
+            $this->fileSystem = new StaticFs();
         }
 
         if (!$this->isExists()) {
@@ -75,7 +77,7 @@ class Fs
      * @param bool $force
      * @return bool
      */
-    public function copy(string $target, ?string $path, bool $force = false): bool
+    public function copy(string $target, ?string $path = null, bool $force = false): bool
     {
         $this->operationList = $this->fileSystem::copy($path ?? $this->path, $target, $force);
 
@@ -85,27 +87,33 @@ class Fs
     /**
      * create new directory in given location
      *
-     * @param string $path
-     * @return boolean
+     * @param ?string $path
+     * @return bool
      */
-    public function mkdir(string $path): bool
+    public function mkdir(?string $path = null): bool
     {
-        $this->operationList = $this->fileSystem::mkdir($path);
+        $this->operationList = $this->fileSystem::mkdir($path ?? $this->path);
 
         return $this->fileSystem::validateComplexOutput($this->operationList);
     }
 
     /**
      * @param array $dirs
+     * @param bool $inMainPath if TRUE, create directories in $this->>path, if FALSE, create directories in given path
      * @return bool
      */
-    public function mkdirs(array $dirs): bool
+    public function mkdirs(array $dirs, bool $inMainPath = true): bool
     {
         $operations = [];
         $status = true;
+        $basePath = '';
+        
+        if ($inMainPath) {
+            $basePath = $this->path . '/';
+        }
 
         foreach ($dirs as $dir) {
-            $status &= $this->mkdir($dir);
+            $status &= $this->mkdir($basePath . $dir);
             $operations[] = $this->operationList;
         }
 
@@ -116,16 +124,17 @@ class Fs
     /**
      * create empty file, and optionally put in them some data
      *
-     * @param string $path
      * @param string $fileName
+     * @param ?string $path
      * @param mixed $data
      * @return bool
      * @example mkfile('file.txt', 'directory/inn')
      * @example mkfile('file.txt', 'directory/inn', 'Lorem ipsum')
      */
-    public function mkfile(string $fileName, ?string $path, $data = null): bool
+    public function mkfile(string $fileName, ?string $path, mixed $data = null): bool
     {
-        $this->operationList = $this->fileSystem::mkfile($path ?? $this->path, $fileName, $data);
+        $usePath = $path ?? $this->path;
+        $this->operationList[$usePath] = $this->fileSystem::mkfile($usePath, $fileName, $data);
 
         return $this->fileSystem::validateComplexOutput($this->operationList);
     }
@@ -170,25 +179,32 @@ class Fs
      * change name of file/directory
      * also can be used to copy operation
      *
-     * @param string $source original path or name
-     * @param string $target new path or name
-     * @return boolean information that operation was successfully, or NULL if path incorrect
+     * @param string $targetName new path or name
+     * @param ?string $path original path or name
+     * @return bool information that operation was successfully, or NULL if path incorrect
      */
-    public function rename($source, $target)
+    public function rename(string $targetName, ?string $path = null): bool
     {
-        
+        $usePath = $path ?? $this->path;
+        $this->operationList[$usePath] = $this->fileSystem::rename($usePath, $targetName);
+
+        return $this->fileSystem::validateComplexOutput($this->operationList);
     }
 
     /**
      * move file or directory to given target
      *
-     * @param string $source
      * @param string $target
+     * @param ?string $source
      * @return bool
      */
-    public function move($source, $target)
+    public function move(string $target, ?string $source = null): bool
     {
-        
+        $usePath = $source ?? $this->path;
+
+        $this->operationList[$usePath] = $this->fileSystem::move($usePath, $target);
+
+        return $this->fileSystem::validateComplexOutput($this->operationList);
     }
 
     /**

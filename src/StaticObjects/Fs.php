@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BlueFilesystem\StaticObjects;
 
 use BlueEvent\Event\Base\Interfaces\EventDispatcherInterface;
@@ -7,9 +9,9 @@ use BlueEvent\Event\Base\Interfaces\EventDispatcherInterface;
 class Fs implements FsInterface
 {
     /**
-     * @var EventDispatcherInterface
+     * @var ?EventDispatcherInterface
      */
-    protected static $event;
+    protected static ?EventDispatcherInterface $event = null;
 
     /**
      * remove file or directory with all content
@@ -60,7 +62,7 @@ class Fs implements FsInterface
         }
 
         foreach ($paths['file'] as $path) {
-            \chmod($path, 0777);
+            \chmod($path, 0775);
         }
         foreach ($paths['dir'] as $path) {
             \chmod($path, 0777);
@@ -300,7 +302,7 @@ class Fs implements FsInterface
      * @param string $path
      * @param string $fileName
      * @param mixed $data
-     * @return boolean information that operation was successfully
+     * @return bool information that operation was successfully
      * @example mkfile('directory/inn', 'file.txt')
      * @example mkfile('directory/inn', 'file.txt', 'Lorem ipsum')
      */
@@ -313,13 +315,13 @@ class Fs implements FsInterface
         if (!Structure::exist($path)) {
             $list = self::mkdir($path);
             if ($list === []) {
-                return $status;
+                return false;
             }
         }
 
         if (\preg_match(self::RESTRICTED_SYMBOLS, $fileName)) {
             self::triggerEvent(self::CREATE_FILE_EXCEPTION, [$fileName]);
-            return $status;
+            return false;
         }
 
         try {
@@ -328,7 +330,7 @@ class Fs implements FsInterface
             );
 
             if ($data) {
-                $status = \fwrite($fileResource, $data);
+                $status = (bool)\fwrite($fileResource, $data);
             }
 
             self::triggerEvent(self::CREATE_FILE_AFTER, [$path, $fileName]);
@@ -338,7 +340,7 @@ class Fs implements FsInterface
             self::triggerEvent(self::CREATE_FILE_EXCEPTION, [$path, $fileName, $exception]);
         }
 
-        return (bool)$status;
+        return $status;
     }
 
     /**
@@ -348,7 +350,7 @@ class Fs implements FsInterface
      * @param string $source original path or name
      * @param string $target new path or name
      * @param bool $force
-     * @return boolean information that operation was successfully
+     * @return bool information that operation was successfully
      */
     public static function rename(string $source, string $target, bool $force = false): bool
     {
@@ -421,9 +423,7 @@ class Fs implements FsInterface
      */
     public static function configureEventHandler(EventDispatcherInterface $eventHandler): void
     {
-        if ($eventHandler) {
-            self::$event = $eventHandler;
-        }
+        self::$event = $eventHandler;
     }
 
     /**
@@ -453,7 +453,7 @@ class Fs implements FsInterface
             $status &= $execStatus === true;
         }
 
-        return $status;
+        return (bool)$status;
     }
 
     /**
@@ -473,9 +473,9 @@ class Fs implements FsInterface
      */
     protected static function withErrorExceptions(callable $fn): mixed {
         \set_error_handler(
-            static function (int $severity, string $message, string $file, int $line): bool {
+            static function (int $severity, string $message): bool {
                 if ($severity === E_WARNING) {
-                    throw new \ErrorException($message, 0, $severity, $file, $line);
+                    throw new FsException($message, $severity);
                 }
                 return false;
 

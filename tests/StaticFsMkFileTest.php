@@ -19,6 +19,8 @@ class StaticFsMkFileTest extends TestCase
 
         \shell_exec('    chmod -R 0777 ' . StaticFsDelTest::TEST_DIR . ' > /dev/null 2>&1');
         \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'test_file > /dev/null 2>&1');
+        \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'not_existing_dir/test_file > /dev/null 2>&1');
+        \shell_exec('rm -r ' . StaticFsDelTest::TEST_DIR . 'not_existing_dir > /dev/null 2>&1');
     }
 
     public function testCreateFile(): void
@@ -29,6 +31,11 @@ class StaticFsMkFileTest extends TestCase
 
         $this->assertTrue($out);
         $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'test_file');
+
+        $out = Fs::mkfile(StaticFsDelTest::TEST_DIR . 'not_existing_dir', 'test_file');
+
+        $this->assertTrue($out);
+        $this->assertFileExists(StaticFsDelTest::TEST_DIR . 'not_existing_dir/test_file');
     }
 
     public function testCreateFileWithContent(): void
@@ -105,8 +112,8 @@ class StaticFsMkFileTest extends TestCase
         $this->testCreateFileWithError();
 
         $this->assertEquals(1, $exceptionsExecutions);
-        $this->assertEquals(1, $afterExecutions);
-        $this->assertEquals(2, $beforeExecutions);
+        $this->assertEquals(2, $afterExecutions);
+        $this->assertEquals(3, $beforeExecutions);
     }
 
     public function tearDown(): void

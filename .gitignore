@@ -3,3 +3,4 @@ build
 composer.lock
 tests/playground/*
 !tests/playground/.gitkeep
+.phpunit.result.cache
