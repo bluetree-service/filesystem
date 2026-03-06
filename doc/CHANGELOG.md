@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.4.0.0 - 2026-03-0
+### Changed
+* Updated composer version
+
 ## 0.4.0.0 - 2026-03-05
 ### Added
 * Composer scripts for testing
