@@ -7,12 +7,12 @@ class Structure
     /**
      * @var array
      */
-    protected $dirTree = [];
+    protected array $dirTree = [];
 
     /**
      * @var array
      */
-    protected $paths = [
+    protected array $paths = [
         'dir' => [],
         'file' => [],
     ];
@@ -20,12 +20,12 @@ class Structure
     /**
      * @var string
      */
-    protected $path;
+    protected string $path;
 
     /**
      * @var bool
      */
-    protected $recursive;
+    protected bool $recursive;
 
     /**
      * @param string $path
@@ -45,7 +45,7 @@ class Structure
      * re read directory content, (optionally all sub folders)
      *
      * @param string $path
-     * @param boolean $recursive
+     * @param bool $recursive
      * @return array
      * @example readDirectory('dir/some_dir')
      * @example readDirectory('dir/some_dir', true)
@@ -59,7 +59,7 @@ class Structure
 
     /**
      * @param string $path
-     * @param boolean $recursive
+     * @param bool $recursive
      * @return array
      */
     protected function readDirectoryRecursive(string $path, bool $recursive): array
@@ -108,7 +108,7 @@ class Structure
     /**
      * transform array wit directory/files tree to list of paths grouped on files and directories
      *
-     * @param boolean $reverse if TRUE revert array (required for deleting)
+     * @param bool $reverse if TRUE revert array (required for deleting)
      * @internal param string $path base path for elements, if empty use paths from transformed structure
      * @return array array with path list for files and directories
      * @example returnPaths(true)
@@ -184,26 +184,29 @@ class Structure
 
     /**
      * @param array $pathList
-     * @param array|\DirectoryIterator $fileInfo
+     * @param array|\SplFileInfo $fileInfo
      * @param string $path
      * @return array
      */
-    protected function processNodeInfo(array $pathList, $fileInfo, string $path): array
+    protected function processNodeInfo(array $pathList, \SplFileInfo|array $fileInfo, string $path): array
     {
         $isDir = \is_dir($path);
 
-        if (\is_array($fileInfo) && $isDir) {
-            $list = $this->returnPathsRecursive($fileInfo);
+        if ($isDir) {
+            if (\is_array($fileInfo)) {
+                $list = $this->returnPathsRecursive($fileInfo);
 
-            /** @var string $element */
-            foreach ($list as $element => $value) {
-                $pathList = $this->setPath($pathList, $element, $value, 'file');
-                $pathList = $this->setPath($pathList, $element, $value, 'dir');
+                foreach ($list as $element => $value) {
+                    $pathList = $this->setPath($pathList, $element, $value, 'file');
+                    $pathList = $this->setPath($pathList, $element, $value, 'dir');
+                }
+
+                $pathList['dir'][] = $path;
+            } else {
+                $pathList['dir'][] = $fileInfo->getRealPath();
             }
-
-            $pathList['dir'][] = $path;
         } else {
-            /** @var \DirectoryIterator $fileInfo */
+            /** @var \SplFileInfo $fileInfo */
             $pathList['file'][] = $fileInfo->getRealPath();
         }
 
@@ -214,7 +217,7 @@ class Structure
      * check that file exists
      *
      * @param string $path
-     * @return boolean true if exists, false if not
+     * @return bool true if exists, false if not
      */
     public static function exist(string $path): bool
     {

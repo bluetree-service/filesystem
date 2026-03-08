@@ -1,7 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## 0.4.0.0 - 2026-03-0
+## 0.4.2.0 - 2026-03-08
+### Changed
+* Fixed path return for non recursive reading
+
+## 0.4.1.0 - 2026-03-06
 ### Changed
 * Updated composer version
 

@@ -18,6 +18,22 @@ class StructureTest extends TestCase
         $this->assertFalse(Structure::exist(StaticFsDelTest::BASE_DIR . '/playground-fake'));
     }
 
+    public function testSimpleStructure()
+    {
+        $structure = new Structure(StaticFsDelTest::TEST_EXAMPLES . '/del');
+
+        $dir = $structure->returnPaths();
+
+        $this->assertNotEmpty($dir);
+        $this->assertArrayHasKey('dir', $dir);
+        $this->assertArrayHasKey('file', $dir);
+        $this->assertNotEmpty($dir['file']);
+        $this->assertNotEmpty($dir['dir']);
+        $this->assertEquals(StaticFsDelTest::TEST_EXAMPLES . '/del/file', $dir['file'][0]);
+        $this->assertEquals(StaticFsDelTest::TEST_EXAMPLES . '/del/1', $dir['dir'][0]);
+        $this->assertEquals(StaticFsDelTest::TEST_EXAMPLES . '/del/2', $dir['dir'][1]);
+    }
+
     public function testReadDirectory(): void
     {
         $key1 = StaticFsDelTest::TEST_EXAMPLES . '/del/file';
